@@ -1,0 +1,65 @@
+{
+  "name": "wueXtension",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "This extension adds functionality to the websites of the university of wuerzburg to assist your daily study life",
+  "homepage_url": "https://merz.dev",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "de",
+  "background": {
+    "page": "src/bg/background.html",
+    "persistent": false,
+    "scripts": [
+      "js/browser-polyfill-0.5.0.js"
+    ]
+  },
+  "options_page": "src/options_custom/index.html",
+  "browser_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "wueXtension action",
+    "default_popup": "src/browser_action/browser_action.html"
+  },
+  "permissions": [
+    "contextMenus",
+    "cookies",
+    "notifications",
+    "tabs",
+    "https://wuecampus2.uni-wuerzburg.de/moodle/",
+    "https://wuestudy.zv.uni-wuerzburg.de/",
+    "https://psywue.sona-systems.com/",
+    "https://www.uni-wuerzburg.de/",
+    "http://www.mcm.uni-wuerzburg.de/startseite/"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://TODO-AENDERN.dd/*"
+      ],
+      "css": [
+        "src/inject/inject.css"
+      ]
+    },
+    {
+      "matches": [
+        "https://wuecampus2.uni-wuerzburg.de/moodle/login/index.php"
+      ],
+      "js": [
+        "js/browser-polyfill-0.5.0.js",
+        "src/inject/wuecampus/loginPage.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://wuecampus2.uni-wuerzburg.de/moodle/*"
+      ],
+      "js": [
+        "js/browser-polyfill-0.5.0.js",
+        "src/inject/wuecampus/nonLogin.js"
+      ]
+    }
+  ]
+}
