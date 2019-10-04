@@ -12,7 +12,7 @@
   "default_locale": "de",
   "background": {
     "scripts": [
-      "js/browser-polyfill-0.5.0.js",
+      "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
       "src/bg/background.js"
     ]
   },
@@ -27,6 +27,7 @@
     "cookies",
     "notifications",
     "tabs",
+    "storage",
     "https://wuecampus2.uni-wuerzburg.de/moodle/",
     "https://wuestudy.zv.uni-wuerzburg.de/",
     "https://psywue.sona-systems.com/",
@@ -42,12 +43,13 @@
         "src/inject/inject.css"
       ]
     },
+
     {
       "matches": [
         "https://wuecampus2.uni-wuerzburg.de/moodle/login/index.php"
       ],
       "js": [
-        "js/browser-polyfill-0.5.0.js",
+        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
         "src/inject/wuecampus/loginPage.js"
       ]
     },
@@ -56,8 +58,18 @@
         "https://wuecampus2.uni-wuerzburg.de/moodle/*"
       ],
       "js": [
-        "js/browser-polyfill-0.5.0.js",
+        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
         "src/inject/wuecampus/nonLogin.js"
+      ]
+    },
+
+    {
+      "matches": [
+        "https://wuestudy.zv.uni-wuerzburg.de/*"
+      ],
+      "js": [
+        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
+        "src/inject/wuestudy/anyPage.js"
       ]
     }
   ]
