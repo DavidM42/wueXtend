@@ -11,10 +11,9 @@
   },
   "default_locale": "de",
   "background": {
-    "page": "src/bg/background.html",
-    "persistent": false,
     "scripts": [
-      "js/browser-polyfill-0.5.0.js"
+      "js/browser-polyfill-0.5.0.js",
+      "src/bg/background.js"
     ]
   },
   "options_page": "src/options_custom/index.html",
