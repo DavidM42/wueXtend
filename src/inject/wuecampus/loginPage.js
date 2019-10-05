@@ -9,6 +9,7 @@ function loginForm(username, password) {
 	loginButton.click();
 }
 
+// TODO write central js file for getting credentials from storage to use in this and wuestudy
 function onCredsGot(credsObj) {
 	const username = credsObj.username;
 	const password = credsObj.password;

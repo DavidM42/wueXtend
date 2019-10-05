@@ -1,4 +1,4 @@
-function loginFlow(username, password) {
+function loginForm(username, password) {
     const loginClassElements = document.getElementsByClassName('input_login_hisinone');
 
     if (loginClassElements.length > 0) {
@@ -20,17 +20,28 @@ function loginFlow(username, password) {
     }
 }
 
+// TODO write central js file for getting credentials from storage to use in this and wuestudy
+function onCredsGot(credsObj) {
+	const username = credsObj.username;
+	const password = credsObj.password;
+	loginForm(username,password);
+}
+
+function onError(error) {
+	console.log(`Error: ${error}`);
+}
+// TODO //////////77
 
 browser.extension.sendMessage({}, function (response) {
     var readyStateCheckInterval = setInterval(function () {
         if (document.readyState === "complete") {
             clearInterval(readyStateCheckInterval);
 
-            const username = 'sXXXX';
-            const password = 'password';
-
-            //handle login if not logged in
-            // loginFlow(username, password);
+            // handle login if not logged in
+			// would like sync storagearea not local but android firefox does not support I think
+			// need storage permission
+			const getPromise = browser.storage.local.get(['username', 'password']);
+			getPromise.then(onCredsGot, onError);
 
         }
     }, 10);
