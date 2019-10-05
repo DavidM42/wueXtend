@@ -1,7 +1,6 @@
 <!doctype html>
 <script type="application/javascript"
 	src="../../node_modules/webextension-polyfill/dist/browser-polyfill.min.js"></script>
-<script type="application/javascript" src="./credentials_save.js"></script>
 <style type="text/css">
 	#mainPopup {
 		padding: 10px;
@@ -12,11 +11,5 @@
 </style>
 
 <div id="mainPopup">
-	<!-- TODO put all this with logic into settings to also be usable in firefox for android 
-		and content script with redirect to settings if login fails anywhere or similiar -->
-	<h1>Login input</h1>
-	<input type="text" name="username" id="username" placeholder="sNummer" title="username">
-	<input type="password" name="password" id="password" placeholder="Password" title="password">
-
-	<input name="Submit" id="saveBtn" type="submit" value="Save credentials" />
+	<h1>Empty Popup only usable on desktop</h1>
 </div>

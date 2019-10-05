@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>WueXtension Settings</title>
+	<script type="application/javascript"
+	src="../../node_modules/webextension-polyfill/dist/browser-polyfill.min.js"></script>
+	<script type="application/javascript" src="./credentials_save.js"></script>
+</head>
+<body>
+	<!-- TODO content script with redirect to settings url if login fails anywhere or similiar -->
+	<h1>Login input</h1>
+	<input type="text" name="username" id="username" placeholder="sNummer" title="username">
+	<input type="password" name="password" id="password" placeholder="Password" title="password">
+
+	<input name="Submit" id="saveBtn" type="submit" value="Save credentials" />
+</body>
+</html>

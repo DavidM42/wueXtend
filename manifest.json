@@ -16,7 +16,7 @@
       "src/bg/background.js"
     ]
   },
-  "options_page": "src/options_custom/index.html",
+  "options_page": "src/options/index.html",
   "browser_action": {
     "default_icon": "icons/icon19.png",
     "default_title": "wueXtension action",
