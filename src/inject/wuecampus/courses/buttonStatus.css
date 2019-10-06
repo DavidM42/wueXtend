@@ -1,0 +1,4 @@
+.notInteractable {
+    pointer-events: none;
+    cursor: default;
+}

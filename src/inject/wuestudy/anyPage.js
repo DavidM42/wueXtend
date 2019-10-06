@@ -1,3 +1,12 @@
+// import { saveSettings } from '../credentials.js';
+function saveSettings(usernameIn,passwordIn) {
+    browser.storage.local.set({
+        username: usernameIn,
+        password: passwordIn,
+    })
+}
+
+
 function loginForm(username, password) {
     const loginClassElements = document.getElementsByClassName('input_login_hisinone');
 
@@ -27,17 +36,55 @@ function loginForm(username, password) {
     }
 }
 
+function ripPasswordsFromForm() {
+    let username = null;
+    let password = null;
+
+    // TODO do this loop only once not two times in one file
+    const loginClassElements = document.getElementsByClassName('input_login_hisinone');
+    if (loginClassElements.length > 0) {
+        const error_infoboxes = document.getElementsByClassName('error_infobox');
+        if (error_infoboxes.length === 0) {
+            for (let i = 0; i < loginClassElements.length; i++) {
+                const element = loginClassElements[i];
+                const title = element.title.toLowerCase()
+                if (title.includes('benutzername') || title.includes('user name')) {
+                    username = element.value;
+                } else if (title.includes('passwor')) { //works for both language cases passwort and password
+                    password = element.value;
+                }
+            }
+        }
+    }
+
+    if (username !== null && password !== null) {
+        console.log('Will save settings received from form')
+        saveSettings(username,password);
+    }
+}
+
+
 // TODO write central js file for getting credentials from storage to use in this and wuestudy
 function onCredsGot(credsObj) {
     const username = credsObj.username;
     const password = credsObj.password;
-    loginForm(username, password);
+
+	if (username === undefined || password === undefined) {
+        // if no username password were set get the ones entered on first login onclick of loginBtn
+        // TODO catch case where loginButton null
+        const loginButton = document.getElementById('loginForm:login');
+        loginButton.onclick = ripPasswordsFromForm;
+	} else {
+        // auto login if creds were set
+        loginForm(username, password);
+    }
+
 }
 
 function onError(error) {
     console.log(`Error: ${error}`);
 }
-// TODO //////////77
+// TODO //////////
 
 browser.extension.sendMessage({}, function (response) {
     var readyStateCheckInterval = setInterval(function () {

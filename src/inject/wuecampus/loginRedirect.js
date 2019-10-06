@@ -3,7 +3,7 @@ browser.extension.sendMessage({}, function (response) {
 		if (document.readyState === "complete") {
 			clearInterval(readyStateCheckInterval);
 
-
+			// check login status here and redirect to login page to login if not
 			let loggedIn = true;
 			const loginSpans = document.getElementsByClassName("login");
 			if (loginSpans.length > 0) {

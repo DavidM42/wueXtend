@@ -59,10 +59,25 @@
       ],
       "js": [
         "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
-        "src/inject/wuecampus/nonLogin.js"
+        "src/inject/wuecampus/loginRedirect.js"
       ]
     },
-
+    {
+      "matches": [
+        "https://wuecampus2.uni-wuerzburg.de/moodle/course/*"
+      ],
+      "js": [
+        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
+        "node_modules/file-saver/dist/FileSaver.min.js",
+        "node_modules/jszip/dist/jszip.min.js",
+        "node_modules/jszip-utils/dist/jszip-utils.min.js",
+        "src/inject/wuecampus/courses/enrollment-button.js",
+        "src/inject/wuecampus/courses/course-download.js"
+      ],
+      "css": [
+        "src/inject/wuecampus/courses/buttonStatus.css"
+      ]
+    },
     {
       "matches": [
         "https://wuestudy.zv.uni-wuerzburg.de/*"
