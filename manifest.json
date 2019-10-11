@@ -1,9 +1,14 @@
 {
-  "name": "wueXtension",
+  "name": "wueXtend",
   "version": "0.0.1",
   "manifest_version": 2,
   "description": "This extension adds functionality to the websites of the university of wuerzburg to assist your daily study life",
-  "homepage_url": "https://merz.dev",
+  "homepage_url": "https://github.com/DavidM42/wueXtension",
+  "applications": {
+    "gecko": {
+      "id": "TODO@wuextend.de"
+    }
+  },
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -16,10 +21,13 @@
       "src/bg/background.js"
     ]
   },
-  "options_page": "src/options/index.html",
+  "options_ui": {
+    "page": "src/options/index.html"
+  },
   "browser_action": {
+    "browser_style": true,
     "default_icon": "icons/icon19.png",
-    "default_title": "wueXtension action",
+    "default_title": "wueXtend quick navigation",
     "default_popup": "src/browser_action/browser_action.html"
   },
   "permissions": [
