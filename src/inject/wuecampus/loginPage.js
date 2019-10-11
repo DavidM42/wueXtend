@@ -35,14 +35,18 @@ function ripPasswordsFromForm() {
 function onCredsGot(credsObj) {
 	const username = credsObj.username;
 	const password = credsObj.password;
+	const autoLogin = credsObj.autoLogin;
 
 	if (username === undefined || password === undefined) {
 		// if no username password were set get the ones entered on first login onclick of loginBtn
 		const loginButton = document.getElementById('loginbtn');
 		loginButton.onclick = ripPasswordsFromForm;
 	} else {
-		// username/password combo set so login with these
-		loginForm(username, password);
+		// option to opt out of auto login
+        if (autoLogin !== false) {
+			// username/password combo set so login with these
+			loginForm(username, password);
+		}
 	}
 }
 
@@ -55,23 +59,19 @@ browser.extension.sendMessage({}, function (response) {
 		if (document.readyState === "complete") {
 			clearInterval(readyStateCheckInterval);
 
-			// browser.storage.local.set({
-			// 	username: 'sXXX',
-			// 	password: '123445',
-			// })
-
 			// document.getElementsByClassName('alert').length == 0
 			// would like sync storagearea not local but android firefox does not support I think
 			// need storage permission
 			// TODO better if else for more readability
 			const noLoginError = document.getElementById('loginerrormessage') === null;
 			if (noLoginError) {
-				const getPromise = browser.storage.local.get(['username', 'password']);
+				// TODO fix this here not getting executed
+				const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
 				getPromise.then(onCredsGot, onError);
 			} else {
 				const sessionInvalid = document.getElementById('loginerrormessage').innerText.toLocaleLowerCase().includes('session');
 				if (sessionInvalid) {
-					const getPromise = browser.storage.local.get(['username', 'password']);
+					const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
 					getPromise.then(onCredsGot, onError);
 				}
 			}
