@@ -19,3 +19,4 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 ## TODO
 * Define one naming scheme for all files and rename them
 * Review requested permission
+* ESLint on and fix allll the problems

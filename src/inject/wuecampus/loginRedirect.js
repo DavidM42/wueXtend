@@ -1,4 +1,4 @@
-function onCredsGot(credsObj) {
+const onCredsGot = (credsObj) => {
 	const autoLogin = credsObj.autoLogin;
 	if (autoLogin !== false) {
 
@@ -8,8 +8,10 @@ function onCredsGot(credsObj) {
 		const loginSpans = document.getElementsByClassName("login");
 		if (loginSpans.length > 0) {
 			for (let i = 0; i < loginSpans.length; i++) {
-				if (loginSpans[i].innerText.includes('sind nicht angemeldet') ||
-					loginSpans[i].innerText.includes('sind als Gast angemeldet')) {
+                if (loginSpans[i].innerText.includes('sind nicht angemeldet') ||
+					loginSpans[i].innerText.includes('sind als Gast angemeldet') ||
+					loginSpans[i].innerText.includes('You are not logged in') ||
+					loginSpans[i].innerText.includes('logged in as guest')) {
 					loggedIn = false;
 				}
 			}
@@ -22,17 +24,17 @@ function onCredsGot(credsObj) {
 	}
 }
 
-function onError(error) {
+const onError = (error) => {
 	console.log(`Error: ${error}`);
 }
 
-browser.extension.sendMessage({}, function (response) {
-	var readyStateCheckInterval = setInterval(function () {
+browser.runtime.sendMessage({},(response) => {
+	var readyStateCheckInterval = setInterval(() => {
 		if (document.readyState === "complete") {
 			clearInterval(readyStateCheckInterval);
 
 			const getPromise = browser.storage.local.get(['autoLogin']);
-			getPromise.then(onCredsGot, onError);
+			getPromise.then(onCredsGot).catch(onError);
 		}
 	}, 10);
 });

@@ -1,13 +1,20 @@
 // import { saveSettings } from '../credentials.js';
-function saveSettings(usernameIn,passwordIn) {
+const saveSettings = (usernameIn,passwordIn) => {
     browser.storage.local.set({
-        username: usernameIn,
+        username: usernameIn.toLowerCase(),
         password: passwordIn,
+        // TODO opt in or optout?
+		autoLogin: true
     })
 }
 
 
-function loginForm(username, password) {
+const loginForm = (username, password) => {
+    // TODO why is this needed why does username keeps getting uppercase
+    if (username[0] === 'S'){
+        username = username.toLowerCase();
+    }
+
     const loginClassElements = document.getElementsByClassName('input_login_hisinone');
 
     // login Form if you try to access reserved site without beeing logged in
@@ -51,7 +58,11 @@ function loginForm(username, password) {
                         element.value = password;
                     }
                 }
-                const loginButton = document.getElementById('loginForm:login');
+                let loginButton = document.getElementById('loginForm:login');
+                if (!loginButton) {
+                    // other class name on mobile site
+                    loginButton = document.getElementsByClassName('mobileLoginButton')[0];
+                }
                 loginButton.click();
             }
 
@@ -63,7 +74,7 @@ function loginForm(username, password) {
     }
 }
 
-function ripPasswordsFromForm() {
+const ripPasswordsFromForm = () => {
     let username = null;
     let password = null;
 
@@ -92,7 +103,7 @@ function ripPasswordsFromForm() {
 
 
 // TODO write central js file for getting credentials from storage to use in this and wuestudy
-function onCredsGot(credsObj) {
+const onCredsGot = (credsObj) => {
     const username = credsObj.username;
     const password = credsObj.password;
     const autoLogin = credsObj.autoLogin;
@@ -112,13 +123,13 @@ function onCredsGot(credsObj) {
 
 }
 
-function onError(error) {
+const onError = (error) => {
     console.log(`Error: ${error}`);
 }
 // TODO //////////
 
-browser.extension.sendMessage({}, function (response) {
-    var readyStateCheckInterval = setInterval(function () {
+browser.runtime.sendMessage({},(response) => {
+    var readyStateCheckInterval = setInterval(() => {
         if (document.readyState === "complete") {
             clearInterval(readyStateCheckInterval);
 
@@ -126,7 +137,7 @@ browser.extension.sendMessage({}, function (response) {
             // would like sync storagearea not local but android firefox does not support I think
             // need storage permission
             const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
-            getPromise.then(onCredsGot, onError);
+            getPromise.then(onCredsGot).catch(onError);
         }
     }, 10);
 });

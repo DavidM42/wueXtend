@@ -8,7 +8,7 @@ const downloadBtnTemplate = `
 </div>
 `;
 
-function addArchiveDownloadBtn() {
+const addArchiveDownloadBtn = () => {
     const dFlexes = document.getElementById('page-header').getElementsByClassName('d-flex');
     if (dFlexes.length === 3) {
         // add btn template 
@@ -20,7 +20,7 @@ function addArchiveDownloadBtn() {
     }
 }
 
-function buttonInProgress(inProgressBool) {
+const buttonInProgress = (inProgressBool) => {
     // reflect status of archive export on website via button
     const archiveBtn = document.getElementById('archiveDownloadBtn');
     const archiveIcon = document.getElementById('archiveDownloadIcon');
@@ -38,8 +38,8 @@ function buttonInProgress(inProgressBool) {
     }
 }
 
-function safeFileName(inString) {
-    // i dont even know what the difference here is but had errors even thou looks same -> probs some encoding error
+const safeFileName = (inString) => {
+    // i dont even know what the difference here is but had errors even though looks same -> probs some encoding error
     inString = inString.replace('ö', 'ö');
 
     // umlaut boogaloo
@@ -51,9 +51,9 @@ function safeFileName(inString) {
     return inString.replace(/[^a-z0-9äöüß]/gi, '-');
 }
 
-function linkedActivities() {
+const linkedActivities = (doc) => {
     let files = [];
-    const activityInstances = document.getElementsByClassName('activityinstance');
+    const activityInstances = doc.getElementsByClassName('activityinstance');
 
     for (let i = 0; i < activityInstances.length; i++) {
         const element = activityInstances[i];
@@ -104,7 +104,28 @@ function linkedActivities() {
     return files;
 }
 
-function saveCourseZip(zip, courseName) {
+const linkedSections = () => {
+    let sectionLinks = [];
+    const sectionInstances = document.getElementsByClassName('section-go-link');
+
+    for (let i = 0; i < sectionInstances.length; i++) {
+        const element = sectionInstances[i];
+
+        // // try to find name of section for sub folder in zip
+        // let sectionName = null;
+        // // TODO this method to get to correct parent is shit and could change -> find better way
+        // const sectionNames = element.parentElement.parentElement.parentElement.getElementsByClassName('sectionname');
+        // if (sectionNames.length >= 1) {
+        //     sectionName = sectionNames[0].innerText
+        // }
+        sectionLinks.push(element.href);
+    }
+
+    // console.log(sectionLinks);
+    return sectionLinks;
+}
+
+const saveCourseZip = (zip, courseName) => {
     let todayString = new Date().toISOString().slice(0, 10);
 
     // Generate the zip file asynchronously
@@ -115,7 +136,7 @@ function saveCourseZip(zip, courseName) {
         //     return decodeURIComponent(string);
         // }
         })
-        .then(function (content) {
+        .then((content) => {
             // TODO maybe https://github.com/jimmywarting/StreamSaver.js
             saveAs(content, "archive-" + safeFileName(courseName) + '-' + todayString + ".zip");
 
@@ -124,10 +145,10 @@ function saveCourseZip(zip, courseName) {
         });
 }
 
-function urlToPromise(url) {
+const urlToPromise = (url) => {
     // from https://stackoverflow.com/a/49003082
-    return new Promise(function (resolve, reject) {
-        JSZipUtils.getBinaryContent(url, function (err, data) {
+    return new Promise((resolve, reject) => {
+        JSZipUtils.getBinaryContent(url, (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -137,7 +158,7 @@ function urlToPromise(url) {
     });
 }
 
-function getCourseName() {
+const getCourseName = () => {
     let name = '';
 
     const pageHeader = document.getElementById('page-header');
@@ -150,17 +171,55 @@ function getCourseName() {
     return name;
 }
 
+// async is important else fails silently
+// TODO make faster by using https://stackoverflow.com/a/37576787 promise all and parsing, adding in paralel
+const externalPageSection = async (url) => {
+    let html = (await (await fetch(url)).text()); 
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(html, "text/html");
+    return doc;
+};
 
-function archiveCourse() {
+
+const archiveCourse = async () => {
     // signal user that is running
     buttonInProgress(true);
 
     let zip = new JSZip();
-    const activities = linkedActivities();
 
-    let otherLinks = "name;section;url"
+    let otherLinks = "name;section;url";
+    let casetrains = "name;section;url";
+    let wuecasts = "name;section;url";
+    const startSize = otherLinks.length;
+
+    const ownBaseActivities = linkedActivities(document);;
+    let activities = ownBaseActivities;
+
+    // TODO section links are not recognized as activity so get them seperately, use fetch method above to get and extract links to also download their files
+    const linkedSectionLinks = linkedSections();
+    // console.log(linkedSectionLinks);
+
+    for (let url of linkedSectionLinks) {
+        let sectionDoc = await externalPageSection(url);
+        // console.log(sectionDoc);
+        let sectionActivities = linkedActivities(sectionDoc);
+        // console.log(sectionActivities);
+        activities = activities.concat(sectionActivities);
+    }
+
+    // console.log(activities.length);
+
+    // filters out duplicates? TODO does this work
+    activities= activities.filter((thing, index, self) => self.findIndex(t => t.url === thing.url) === index);
+
+    console.log(activities);
+    // console.log(activities.length);
+
+    // return;
+
     // let activityFound = null;
     activities.forEach(activity => {
+
         // debuggging TODO logic
 
         // setting file name with section folder if it exists and was found
@@ -169,7 +228,7 @@ function archiveCourse() {
             fileName = safeFileName(activity.section) + '/' + fileName;
         }
 
-        // TODO images and all the other file typs relevant and link sammel file for rest like casetrain
+        // TODO all the other file typs relevant and link sammel file for rest like casetrain
         switch (activity.type) {
             case 'pdf':
                 // console.log(fileName);
@@ -187,10 +246,10 @@ function archiveCourse() {
                 zip.file(fileName + '.png', urlToPromise(activity.url), { binary: true });
                 break;
             case 'casetrain':
-                // TODO casetrain list file
+                casetrains += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
                 break;
             case 'wuecasting':
-                // TODO wuecasting list
+                wuecasts += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
                 break;
 
             // TODO how to solve very big problem of folders you have to open to get files
@@ -206,7 +265,15 @@ function archiveCourse() {
 
     // fallback file with rest of the things
     // for now saved as csv
-    zip.file('other-links.csv', otherLinks , { binary: false });
+    if (otherLinks.length !== startSize) {
+        zip.file('other-links.csv', otherLinks , { binary: false });
+    }
+    if (casetrains.length !== startSize) {
+        zip.file('casetrains.csv', casetrains , { binary: false });
+    }
+    if (wuecasts.length !== startSize) {
+        zip.file('wuecasts.csv', otherLinks , { binary: false });
+    }
 
     // console.log(activityFound);
     // zip.file(safeFileName(activityFound.name) + '.pdf', urlToPromise(activityFound.url), { binary: true }); //, base64: true
@@ -220,14 +287,15 @@ function archiveCourse() {
     saveCourseZip(zip, getCourseName());
 }
 
-browser.extension.sendMessage({}, function (response) {
-    var readyStateCheckInterval = setInterval(function () {
+
+console.log("should add btn");
+
+browser.runtime.sendMessage({},(response) => {
+    var readyStateCheckInterval = setInterval(() => {
         if (document.readyState === "complete") {
             clearInterval(readyStateCheckInterval);
 
-            // archiveCourse();
             addArchiveDownloadBtn();
-
         }
     }, 10);
 });

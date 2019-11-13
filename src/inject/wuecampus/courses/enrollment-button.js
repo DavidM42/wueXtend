@@ -7,7 +7,7 @@ const leaveButtonTemplate = `
 </div>
 `;
 
-function addEnrollmentButton() {
+const addEnrollmentButton = () => {
     const parentElements = document.getElementsByClassName('studentselfenrole');
     if (parentElements.length === 1) {
         const aElements = parentElements[0].getElementsByTagName('a');
@@ -27,8 +27,8 @@ function addEnrollmentButton() {
     }
 }
 
-browser.extension.sendMessage({}, function (response) {
-    var readyStateCheckInterval = setInterval(function () {
+browser.runtime.sendMessage({}, (response) => {
+    var readyStateCheckInterval = setInterval(() => {
         if (document.readyState === "complete") {
             clearInterval(readyStateCheckInterval);
 

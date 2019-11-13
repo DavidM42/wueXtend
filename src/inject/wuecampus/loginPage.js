@@ -1,13 +1,14 @@
 // import { saveSettings } from '../credentials.js';
-function saveSettings(usernameIn,passwordIn) {
+const saveSettings = (usernameIn,passwordIn) => {
     browser.storage.local.set({
-        username: usernameIn,
-        password: passwordIn,
+        username: usernameIn.toLowerCase(),
+		password: passwordIn,
+		// TODO opt in or optout?
+		autoLogin: true
     })
 }
 
-
-function loginForm(username, password) {
+const loginForm = (username, password) => {
 	const usernameField = document.getElementById('username');
 	const passwordField = document.getElementById('password');
 
@@ -24,7 +25,7 @@ function loginForm(username, password) {
 	// }
 }
 
-function ripPasswordsFromForm() {
+const ripPasswordsFromForm = () => {
 	const username = document.getElementById('username').value;
 	const password = document.getElementById('password').value;
 	console.log('Will save settings received from form')
@@ -32,7 +33,9 @@ function ripPasswordsFromForm() {
 }
 
 // TODO write central js file for getting credentials from storage to use in this and wuestudy
-function onCredsGot(credsObj) {
+const onCredsGot = (credsObj) => {
+	console.log("got creds");
+	console.log(credsObj);
 	const username = credsObj.username;
 	const password = credsObj.password;
 	const autoLogin = credsObj.autoLogin;
@@ -50,12 +53,12 @@ function onCredsGot(credsObj) {
 	}
 }
 
-function onError(error) {
+const onError = (error) => {
 	console.log(`Error: ${error}`);
 }
 
-browser.extension.sendMessage({}, function (response) {
-	var readyStateCheckInterval = setInterval(function () {
+browser.runtime.sendMessage({}, (response) => {
+	var readyStateCheckInterval = setInterval(() => {
 		if (document.readyState === "complete") {
 			clearInterval(readyStateCheckInterval);
 
@@ -67,12 +70,12 @@ browser.extension.sendMessage({}, function (response) {
 			if (noLoginError) {
 				// TODO fix this here not getting executed
 				const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
-				getPromise.then(onCredsGot, onError);
+				getPromise.then(onCredsGot).catch(onError);
 			} else {
 				const sessionInvalid = document.getElementById('loginerrormessage').innerText.toLocaleLowerCase().includes('session');
 				if (sessionInvalid) {
 					const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
-					getPromise.then(onCredsGot, onError);
+					getPromise.then(onCredsGot).catch(onError);
 				}
 			}
 

@@ -1,13 +1,13 @@
-function saveSettings() {
+const saveSettings = () => {
     browser.storage.local.set({
-        username: document.getElementById('username').value,
+        username: document.getElementById('username').value.toLowerCase(),
         password: document.getElementById('password').value,
         autoLogin: document.getElementById('autoLogin').checked,
-    })
+    });
 }
 
 // prefills field with values from storage
-function preloadFieldsValue(credsObj) {
+const preloadFieldsValue = (credsObj) => {
     console.log(credsObj);
     if (credsObj.username !== undefined) {
         document.getElementById('username').value = credsObj.username;
@@ -20,16 +20,16 @@ function preloadFieldsValue(credsObj) {
     }
 }
 
-function onError(error) {
+const onError = (error) => {
 	console.log(`Error: ${error}`);
 }
 
-window.onload = function () {
+window.onload = () => {
     
     // need to attach event handler cause onlclick attribute is conten security policy disallowed cause inline
-    document.getElementById('saveBtn').onclick = this.saveSettings;
+    document.getElementById('saveBtn').onclick = saveSettings;
 
     // get creds and prefill
     const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
-    getPromise.then(preloadFieldsValue, onError);
+    getPromise.then(preloadFieldsValue).catch(onError);
 }
