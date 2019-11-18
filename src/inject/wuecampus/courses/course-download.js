@@ -18,7 +18,7 @@ const addArchiveDownloadBtn = () => {
         const archiveBtn = document.getElementById('archiveDownloadBtn');
         archiveBtn.onclick = archiveCourse;
     }
-}
+};
 
 const buttonInProgress = (inProgressBool) => {
     // reflect status of archive export on website via button
@@ -36,7 +36,7 @@ const buttonInProgress = (inProgressBool) => {
         archiveIcon.classList.add('fa-download');
         archiveBtn.classList.remove('notInteractable');
     }
-}
+};
 
 const safeFileName = (inString) => {
     // i dont even know what the difference here is but had errors even though looks same -> probs some encoding error
@@ -49,7 +49,7 @@ const safeFileName = (inString) => {
     // TODO is temp simple solution thanks to https://stackoverflow.com/a/8485137 maybe safer way usable in client side js
     // including umlaut boogaloo so doesnt get -
     return inString.replace(/[^a-z0-9äöüß]/gi, '-');
-}
+};
 
 const linkedActivities = (doc) => {
     let files = [];
@@ -63,7 +63,7 @@ const linkedActivities = (doc) => {
         // TODO this method to get to correct parent is shit and could change -> find better way
         const sectionNames = element.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.getElementsByClassName('sectionname');
         if (sectionNames.length >= 1) {
-            sectionName = sectionNames[0].innerText
+            sectionName = sectionNames[0].innerText;
         }
 
         // TODO not found catch?
@@ -72,7 +72,7 @@ const linkedActivities = (doc) => {
         let link = linKaTag.href;
         if (link.includes('resource/view.php?')) {
             // workaround cause stupid onclick event and redirect for some resources
-            link += '&redirect=1'
+            link += '&redirect=1';
         }
 
         // TODO not found catch?
@@ -96,13 +96,13 @@ const linkedActivities = (doc) => {
             imgSrc: imageSrc,
             type: typeV,
             section: sectionName
-        }
-        files.push(file)
+        };
+        files.push(file);
     }
 
     // console.log(files);
     return files;
-}
+};
 
 const linkedSections = () => {
     let sectionLinks = [];
@@ -123,31 +123,33 @@ const linkedSections = () => {
 
     // console.log(sectionLinks);
     return sectionLinks;
-}
+};
 
 const saveCourseZip = (zip, courseName) => {
     let todayString = new Date().toISOString().slice(0, 10);
 
     // Generate the zip file asynchronously
     zip.generateAsync({ 
-        type: "blob", 
+        type: 'blob', 
         // TODO works?
         // encodeFileName: function (string) {
         //     return decodeURIComponent(string);
         // }
-        })
+    })
         .then((content) => {
             // TODO maybe https://github.com/jimmywarting/StreamSaver.js
-            saveAs(content, "archive-" + safeFileName(courseName) + '-' + todayString + ".zip");
+            // eslint-disable-next-line no-undef
+            saveAs(content, 'archive-' + safeFileName(courseName) + '-' + todayString + '.zip');
 
             // allow download again
             buttonInProgress(false);
         });
-}
+};
 
 const urlToPromise = (url) => {
     // from https://stackoverflow.com/a/49003082
     return new Promise((resolve, reject) => {
+        // eslint-disable-next-line no-undef
         JSZipUtils.getBinaryContent(url, (err, data) => {
             if (err) {
                 reject(err);
@@ -156,7 +158,7 @@ const urlToPromise = (url) => {
             }
         });
     });
-}
+};
 
 const getCourseName = () => {
     let name = '';
@@ -169,14 +171,14 @@ const getCourseName = () => {
         }
     }
     return name;
-}
+};
 
 // async is important else fails silently
 // TODO make faster by using https://stackoverflow.com/a/37576787 promise all and parsing, adding in paralel
 const externalPageSection = async (url) => {
     let html = (await (await fetch(url)).text()); 
     let parser = new DOMParser();
-    let doc = parser.parseFromString(html, "text/html");
+    let doc = parser.parseFromString(html, 'text/html');
     return doc;
 };
 
@@ -185,14 +187,15 @@ const archiveCourse = async () => {
     // signal user that is running
     buttonInProgress(true);
 
+    // eslint-disable-next-line no-undef
     let zip = new JSZip();
 
-    let otherLinks = "name;section;url";
-    let casetrains = "name;section;url";
-    let wuecasts = "name;section;url";
+    let otherLinks = 'name;section;url';
+    let casetrains = 'name;section;url';
+    let wuecasts = 'name;section;url';
     const startSize = otherLinks.length;
 
-    const ownBaseActivities = linkedActivities(document);;
+    const ownBaseActivities = linkedActivities(document);
     let activities = ownBaseActivities;
 
     // TODO section links are not recognized as activity so get them seperately, use fetch method above to get and extract links to also download their files
@@ -230,32 +233,32 @@ const archiveCourse = async () => {
 
         // TODO all the other file typs relevant and link sammel file for rest like casetrain
         switch (activity.type) {
-            case 'pdf':
-                // console.log(fileName);
-                zip.file(fileName + '.pdf', urlToPromise(activity.url), { binary: true });
-                break;
-            case 'spreadsheet':
-                // TODO derive extension from url or something not hardcoded
-                zip.file(fileName + '.xls', urlToPromise(activity.url), { binary: true });
-                break;
-            case 'jpeg':
-                zip.file(fileName + '.jpeg', urlToPromise(activity.url), { binary: true });
-                break;
-            case 'png':
-                // never seen but possible I think
-                zip.file(fileName + '.png', urlToPromise(activity.url), { binary: true });
-                break;
-            case 'casetrain':
-                casetrains += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
-                break;
-            case 'wuecasting':
-                wuecasts += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
-                break;
+        case 'pdf':
+            // console.log(fileName);
+            zip.file(fileName + '.pdf', urlToPromise(activity.url), { binary: true });
+            break;
+        case 'spreadsheet':
+            // TODO derive extension from url or something not hardcoded
+            zip.file(fileName + '.xls', urlToPromise(activity.url), { binary: true });
+            break;
+        case 'jpeg':
+            zip.file(fileName + '.jpeg', urlToPromise(activity.url), { binary: true });
+            break;
+        case 'png':
+            // never seen but possible I think
+            zip.file(fileName + '.png', urlToPromise(activity.url), { binary: true });
+            break;
+        case 'casetrain':
+            casetrains += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
+            break;
+        case 'wuecasting':
+            wuecasts += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
+            break;
 
             // TODO how to solve very big problem of folders you have to open to get files
-            default:
-                // fallback to add to csv list for link collection
-                otherLinks += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
+        default:
+            // fallback to add to csv list for link collection
+            otherLinks += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
         }
 
         // if (activity.type === 'pdf') {
@@ -285,14 +288,15 @@ const archiveCourse = async () => {
     // img.file("smile.gif", imgData, { base64: true });
 
     saveCourseZip(zip, getCourseName());
-}
+};
 
 
-console.log("should add btn");
+console.log('should add btn');
 
-browser.runtime.sendMessage({},(response) => {
+// eslint-disable-next-line no-undef
+browser.runtime.sendMessage({},() => {
     var readyStateCheckInterval = setInterval(() => {
-        if (document.readyState === "complete") {
+        if (document.readyState === 'complete') {
             clearInterval(readyStateCheckInterval);
 
             addArchiveDownloadBtn();

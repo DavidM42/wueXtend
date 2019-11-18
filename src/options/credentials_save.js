@@ -1,10 +1,13 @@
+// eslint-disable-next-line no-undef
+const browserPolyFill = browser;
+
 const saveSettings = () => {
-    browser.storage.local.set({
+    browserPolyFill.storage.local.set({
         username: document.getElementById('username').value.toLowerCase(),
         password: document.getElementById('password').value,
         autoLogin: document.getElementById('autoLogin').checked,
     });
-}
+};
 
 // prefills field with values from storage
 const preloadFieldsValue = (credsObj) => {
@@ -18,11 +21,11 @@ const preloadFieldsValue = (credsObj) => {
     if (credsObj.autoLogin !== undefined) {
         document.getElementById('autoLogin').checked = credsObj.autoLogin;
     }
-}
+};
 
 const onError = (error) => {
-	console.log(`Error: ${error}`);
-}
+    console.log(`Error: ${error}`);
+};
 
 window.onload = () => {
     
@@ -30,6 +33,6 @@ window.onload = () => {
     document.getElementById('saveBtn').onclick = saveSettings;
 
     // get creds and prefill
-    const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
+    const getPromise = browserPolyFill.storage.local.get(['username', 'password', 'autoLogin']);
     getPromise.then(preloadFieldsValue).catch(onError);
-}
+};

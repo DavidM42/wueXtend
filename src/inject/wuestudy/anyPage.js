@@ -1,12 +1,15 @@
+// eslint-disable-next-line no-undef
+const browserPolyFill = browser;
+
 // import { saveSettings } from '../credentials.js';
 const saveSettings = (usernameIn,passwordIn) => {
-    browser.storage.local.set({
+    browserPolyFill.storage.local.set({
         username: usernameIn.toLowerCase(),
         password: passwordIn,
         // TODO opt in or optout?
-		autoLogin: true
-    })
-}
+        autoLogin: true
+    });
+};
 
 
 const loginForm = (username, password) => {
@@ -22,7 +25,7 @@ const loginForm = (username, password) => {
     const loginFormInputs = document.getElementsByClassName('input_login');
 
     if (loginForm || loginClassElements.length > 0) {
-        console.log("You are not logged in")
+        console.log('You are not logged in');
 
         const error_infoboxes = document.getElementsByClassName('error_infobox');
         if (error_infoboxes.length === 0) {
@@ -51,7 +54,7 @@ const loginForm = (username, password) => {
                 // filling out info not using ids cause seem randomized TODO maybe not language change safe
                 for (let i = 0; i < loginClassElements.length; i++) {
                     const element = loginClassElements[i];
-                    const title = element.title.toLowerCase()
+                    const title = element.title.toLowerCase();
                     if (title.includes('benutzername') || title.includes('user name')) {
                         element.value = username;
                     } else if (title.includes('passwor')) { //works for both language cases passwort and password
@@ -69,10 +72,10 @@ const loginForm = (username, password) => {
 
         } else {
             console.log('Login failed previously');
-            alert('Login failed. Check credentials in addon settings')
+            alert('Login failed. Check credentials in addon settings');
         }
     }
-}
+};
 
 const ripPasswordsFromForm = () => {
     let username = null;
@@ -85,7 +88,7 @@ const ripPasswordsFromForm = () => {
         if (error_infoboxes.length === 0) {
             for (let i = 0; i < loginClassElements.length; i++) {
                 const element = loginClassElements[i];
-                const title = element.title.toLowerCase()
+                const title = element.title.toLowerCase();
                 if (title.includes('benutzername') || title.includes('user name')) {
                     username = element.value;
                 } else if (title.includes('passwor')) { //works for both language cases passwort and password
@@ -96,10 +99,10 @@ const ripPasswordsFromForm = () => {
     }
 
     if (username !== null && password !== null) {
-        console.log('Will save settings received from form')
+        console.log('Will save settings received from form');
         saveSettings(username,password);
     }
-}
+};
 
 
 // TODO write central js file for getting credentials from storage to use in this and wuestudy
@@ -108,12 +111,12 @@ const onCredsGot = (credsObj) => {
     const password = credsObj.password;
     const autoLogin = credsObj.autoLogin;
 
-	if (username === undefined || password === undefined) {
+    if (username === undefined || password === undefined) {
         // if no username password were set get the ones entered on first login onclick of loginBtn
         // TODO catch case where loginButton null
         const loginButton = document.getElementById('loginForm:login');
         loginButton.onclick = ripPasswordsFromForm;
-	} else {
+    } else {
         // auto login turn of setting
         if (autoLogin !== false){
             // auto login if creds were set
@@ -121,22 +124,22 @@ const onCredsGot = (credsObj) => {
         }
     }
 
-}
+};
 
 const onError = (error) => {
     console.log(`Error: ${error}`);
-}
+};
 // TODO //////////
 
-browser.runtime.sendMessage({},(response) => {
+browserPolyFill.runtime.sendMessage({},() => {
     var readyStateCheckInterval = setInterval(() => {
-        if (document.readyState === "complete") {
+        if (document.readyState === 'complete') {
             clearInterval(readyStateCheckInterval);
 
             // handle login if not logged in
             // would like sync storagearea not local but android firefox does not support I think
             // need storage permission
-            const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
+            const getPromise = browserPolyFill.storage.local.get(['username', 'password', 'autoLogin']);
             getPromise.then(onCredsGot).catch(onError);
         }
     }, 10);

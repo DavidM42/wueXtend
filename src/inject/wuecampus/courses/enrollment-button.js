@@ -25,11 +25,12 @@ const addEnrollmentButton = () => {
             }
         }
     }
-}
+};
 
-browser.runtime.sendMessage({}, (response) => {
+// eslint-disable-next-line no-undef
+browser.runtime.sendMessage({}, () => {
     var readyStateCheckInterval = setInterval(() => {
-        if (document.readyState === "complete") {
+        if (document.readyState === 'complete') {
             clearInterval(readyStateCheckInterval);
 
             /* Adding button to easily leave course here  */
