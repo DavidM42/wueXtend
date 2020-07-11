@@ -5,16 +5,33 @@
 	<script type="application/javascript"
 	src="../../node_modules/webextension-polyfill/dist/browser-polyfill.min.js"></script>
 	<script type="application/javascript" src="./credentials_save.js"></script>
+	<link rel="stylesheet" type="text/css" href="./style.css">
 </head>
 <body>
 	<!-- TODO content script with redirect to settings url if login fails anywhere or similiar -->
-	<h1>Login input</h1>
-	<input type="text" name="username" id="username" placeholder="sNummer" title="username">
-	<input type="password" name="password" id="password" placeholder="Password" title="password">
+	<h1>Wuecampus/Wuestudy Login Einstellungen:</h1>
 
-	<!-- TODO label to tell you what it does -->
-	<input type="checkbox" name="autoLogin" id="autoLogin" title="true">
+	<div class="settingItem">
+		<label class="textInputLabel">
+			Username: 
+			<input type="text" name="username"  id="username" placeholder="sNummer" title="username">
+		</label>
+	</div>
 
-	<input name="Submit" id="saveBtn" type="submit" value="Save credentials" />
+	<div class="settingItem">
+		<label class="textInputLabel">
+			Password: 
+			<input type="password" name="password" id="password" placeholder="Password" title="password">
+		</label>
+	</div>
+
+	<div class="settingItem">
+		<label>
+			Automatic Login: 
+			<input type="checkbox" name="autoLogin" id="autoLogin" title="true">
+		</label>
+	</div>
+
+	<input name="Submit" id="saveBtn" type="submit" value="Save settings" />
 </body>
 </html>

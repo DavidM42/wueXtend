@@ -1,0 +1,12 @@
+label.textInputLabel {
+    width:20px;
+    display: inline-block;
+}
+
+div.settingItem {
+    margin-bottom: 10px;
+}
+
+input#autoLogin {
+    padding-top: 300px;
+}
