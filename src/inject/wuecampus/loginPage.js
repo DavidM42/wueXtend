@@ -6,7 +6,7 @@ const saveSettings = (usernameIn,passwordIn) => {
     browserPolyFill.storage.local.set({
         username: usernameIn.toLowerCase(),
         password: passwordIn,
-        // TODO opt in or optout?
+        // opt in cause important feature
         autoLogin: true
     });
 };
@@ -80,6 +80,7 @@ browserPolyFill.runtime.sendMessage({}, () => {
                     const getPromise = browserPolyFill.storage.local.get(['username', 'password', 'autoLogin']);
                     getPromise.then(onCredsGot).catch(onError);
                 }
+                // TODO if loginerrormessage other than sessionInvalid redirect to setttings of extension
             }
 
         }

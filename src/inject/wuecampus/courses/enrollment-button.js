@@ -1,4 +1,3 @@
-// TODO smarter with CSS file and html template
 const leaveButtonTemplate = `
 <div class="studentdash nav-item nav-link" style="padding: 0 3px 0 2px;">
     <a role="button" title="Leave course" class="btn btn-secondary fhs-tooltip" id="logoutBtnA">

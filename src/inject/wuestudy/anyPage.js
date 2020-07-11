@@ -129,7 +129,6 @@ const onCredsGot = (credsObj) => {
 const onError = (error) => {
     console.log(`Error: ${error}`);
 };
-// TODO //////////
 
 browserPolyFill.runtime.sendMessage({},() => {
     var readyStateCheckInterval = setInterval(() => {
