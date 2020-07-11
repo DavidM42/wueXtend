@@ -9,15 +9,20 @@ const downloadBtnTemplate = `
 `;
 
 const addArchiveDownloadBtn = () => {
-    const dFlexes = document.getElementById('page-header').getElementsByClassName('d-flex');
-    if (dFlexes.length === 3) {
-        // add btn template 
-        dFlexes[0].innerHTML += downloadBtnTemplate;
+    // TODO fix only having one button never more than one
+    // const existingArchiveBtn = document.getElementById('archiveDownloadBtn');
+    // if (!existingArchiveBtn) {
 
-        // and onclick event to download
-        const archiveBtn = document.getElementById('archiveDownloadBtn');
-        archiveBtn.onclick = archiveCourse;
-    }
+        const dFlexes = document.getElementById('page-header').getElementsByClassName('d-flex');
+        if (dFlexes.length === 3) {
+            // add btn template 
+            dFlexes[0].innerHTML += downloadBtnTemplate;
+    
+            // and onclick event to download
+            const archiveBtn = document.getElementById('archiveDownloadBtn');
+            archiveBtn.onclick = archiveCourse;
+        }
+    // }
 };
 
 const buttonInProgress = (inProgressBool) => {
@@ -195,8 +200,10 @@ const archiveCourse = async () => {
     let wuecasts = 'name;section;url';
     const startSize = otherLinks.length;
 
-    const ownBaseActivities = linkedActivities(document);
-    let activities = ownBaseActivities;
+    // const ownBaseActivities = linkedActivities(document);
+    // let activities = ownBaseActivities;
+    // TODO revert test here
+    let activities = [];
 
     // TODO section links are not recognized as activity so get them seperately, use fetch method above to get and extract links to also download their files
     const linkedSectionLinks = linkedSections();
@@ -278,14 +285,69 @@ const archiveCourse = async () => {
         zip.file('wuecasts.csv', otherLinks , { binary: false });
     }
 
-    // console.log(activityFound);
-    // zip.file(safeFileName(activityFound.name) + '.pdf', urlToPromise(activityFound.url), { binary: true }); //, base64: true
+
+    /* Testing creating a html element backup of course */
+    
+    // deep clone document clear head and body
+    let doc = document.cloneNode(true);
+    doc.head = document.createElement('head');
+    doc.body = document.createElement('body');
+
+    // append inline css elements from site to backup doc
+    doc.querySelectorAll('style[type="text/css"').forEach((element) => {
+        doc.head.appendChild(element);
+    });
+
+    // append inline script elements from site to backup doc
+    doc.querySelectorAll('script:not([src]').forEach((element) => {
+        doc.head.appendChild(element);
+    });
+
+    // add deep cloned paged header and content divs to html
+    let pageHeader = document.querySelector('header#page-header').cloneNode(true);
+    const archiveBtn = pageHeader.querySelector('#archiveDownloadBtn');
+    if (archiveBtn) {
+        archiveBtn.remove();
+    }
+    let relevantMainContentBody = document.querySelector('section#region-main').cloneNode(true);
+
+    doc.body.appendChild(pageHeader);
+    doc.body.appendChild(relevantMainContentBody);
+
+    // convert dependancies to array an combine
+    let allCssLinks = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
+    let allJSLinks = Array.prototype.slice.call(document.querySelectorAll('script[src]'));
+    const allExternalResources = allCssLinks.concat(allJSLinks);
+
+    for (let i = 0; i < allExternalResources.length; i++) {
+        const linkElement = allExternalResources[i].cloneNode(true);
+
+        // add css to zip for download
+        let source = linkElement.href || linkElement.src;
+        let pathArray = source.split('https://wuecampus2.uni-wuerzburg.de/moodle/');
+        if (pathArray.length < 2) {
+            continue;
+        }
+        const path = 'websources/' + pathArray[1];
+        zip.file(path, urlToPromise(source) , { binary: true });
+
+        // add link to it to html
+        if (linkElement.href) {
+            linkElement.href = path;
+        } else if(linkElement.src) {
+            linkElement.src = path;
+        } else {
+            continue;
+        }
+        doc.head.appendChild(linkElement);
+    }
 
 
-    // Generate a directory within the Zip file structure
-    // var img = zip.folder("images");
-    // Add a file to the directory, in this case an image with data URI as contents
-    // img.file("smile.gif", imgData, { base64: true });
+    // add html to zip
+    const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+    zip.file(getCourseName() + '.html', htmlWithDoctype , { binary: false });
+
+    //////////////////////////////////////////
 
     saveCourseZip(zip, getCourseName());
 };
