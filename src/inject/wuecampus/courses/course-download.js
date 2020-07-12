@@ -56,79 +56,6 @@ const safeFileName = (inString) => {
     return inString.replace(/[^a-z0-9äöüß]/gi, '-');
 };
 
-const linkedActivities = (doc) => {
-    let files = [];
-    const activityInstances = doc.getElementsByClassName('activityinstance');
-
-    for (let i = 0; i < activityInstances.length; i++) {
-        const element = activityInstances[i];
-
-        // try to find name of section for sub folder in zip
-        let sectionName = null;
-        // TODO this method to get to correct parent is shit and could change -> find better way
-        const sectionNames = element.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.getElementsByClassName('sectionname');
-        if (sectionNames.length >= 1) {
-            sectionName = sectionNames[0].innerText;
-        }
-
-        // TODO not found catch?
-        const linKaTag = element.getElementsByTagName('a')[0];
-
-        let link = linKaTag.href;
-        if (link.includes('resource/view.php?')) {
-            // workaround cause stupid onclick event and redirect for some resources
-            link += '&redirect=1';
-        }
-
-        // TODO not found catch?
-        const nameV = linKaTag.getElementsByTagName('span')[0].innerText;
-
-        // TODO catch and switch for fileType somewhere seperate
-        const imageSrc = linKaTag.getElementsByTagName('img')[0].src;
-        const imageSrcSplit = imageSrc.split('/');
-
-        // strange behaviour but whatever worked around
-        let typeV = imageSrcSplit[imageSrcSplit.length - 1];
-        if (typeV === 'icon') {
-            typeV = imageSrcSplit[imageSrcSplit.length - 3];
-        }
-
-        // TODO would like to type return type of this method with ts
-        // constructing object with relevant info
-        const file = {
-            url: link,
-            name: nameV,
-            imgSrc: imageSrc,
-            type: typeV,
-            section: sectionName
-        };
-        files.push(file);
-    }
-
-    // console.log(files);
-    return files;
-};
-
-const linkedSections = () => {
-    let sectionLinks = [];
-    const sectionInstances = document.getElementsByClassName('section-go-link');
-
-    for (let i = 0; i < sectionInstances.length; i++) {
-        const element = sectionInstances[i];
-
-        // // try to find name of section for sub folder in zip
-        // let sectionName = null;
-        // // TODO this method to get to correct parent is shit and could change -> find better way
-        // const sectionNames = element.parentElement.parentElement.parentElement.getElementsByClassName('sectionname');
-        // if (sectionNames.length >= 1) {
-        //     sectionName = sectionNames[0].innerText
-        // }
-        sectionLinks.push(element.href);
-    }
-
-    // console.log(sectionLinks);
-    return sectionLinks;
-};
 
 const saveCourseZip = (zip, courseName) => {
     let todayString = new Date().toISOString().slice(0, 10);
@@ -178,131 +105,24 @@ const getCourseName = () => {
     return name;
 };
 
-// async is important else fails silently
-// TODO make faster by using https://stackoverflow.com/a/37576787 promise all and parsing, adding in paralel
-const externalPageSection = async (url) => {
-    let html = (await (await fetch(url)).text()); 
-    let parser = new DOMParser();
-    let doc = parser.parseFromString(html, 'text/html');
-    return doc;
-};
 
-
-const archiveCourse = async () => {
-    // signal user that is running
-    buttonInProgress(true);
-
-    // eslint-disable-next-line no-undef
-    let zip = new JSZip();
-
-    let otherLinks = 'name;section;url';
-    let casetrains = 'name;section;url';
-    let wuecasts = 'name;section;url';
-    const startSize = otherLinks.length;
-
-    // const ownBaseActivities = linkedActivities(document);
-    // let activities = ownBaseActivities;
-    // TODO revert test here
-    let activities = [];
-
-    // TODO section links are not recognized as activity so get them seperately, use fetch method above to get and extract links to also download their files
-    const linkedSectionLinks = linkedSections();
-    // console.log(linkedSectionLinks);
-
-    for (let url of linkedSectionLinks) {
-        let sectionDoc = await externalPageSection(url);
-        // console.log(sectionDoc);
-        let sectionActivities = linkedActivities(sectionDoc);
-        // console.log(sectionActivities);
-        activities = activities.concat(sectionActivities);
-    }
-
-    // console.log(activities.length);
-
-    // filters out duplicates? TODO does this work
-    activities= activities.filter((thing, index, self) => self.findIndex(t => t.url === thing.url) === index);
-
-    console.log(activities);
-    // console.log(activities.length);
-
-    // return;
-
-    // let activityFound = null;
-    activities.forEach(activity => {
-
-        // debuggging TODO logic
-
-        // setting file name with section folder if it exists and was found
-        let fileName = safeFileName(activity.name);
-        if (activity.section && activity.section !== null) {
-            fileName = safeFileName(activity.section) + '/' + fileName;
-        }
-
-        // TODO all the other file typs relevant and link sammel file for rest like casetrain
-        switch (activity.type) {
-        case 'pdf':
-            // console.log(fileName);
-            zip.file(fileName + '.pdf', urlToPromise(activity.url), { binary: true });
-            break;
-        case 'spreadsheet':
-            // TODO derive extension from url or something not hardcoded
-            zip.file(fileName + '.xls', urlToPromise(activity.url), { binary: true });
-            break;
-        case 'jpeg':
-            zip.file(fileName + '.jpeg', urlToPromise(activity.url), { binary: true });
-            break;
-        case 'png':
-            // never seen but possible I think
-            zip.file(fileName + '.png', urlToPromise(activity.url), { binary: true });
-            break;
-        case 'casetrain':
-            casetrains += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
-            break;
-        case 'wuecasting':
-            wuecasts += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
-            break;
-
-            // TODO how to solve very big problem of folders you have to open to get files
-        default:
-            // fallback to add to csv list for link collection
-            otherLinks += '\n' + activity.name + ';' + activity.section + ';' + activity.url;
-        }
-
-        // if (activity.type === 'pdf') {
-        //     activityFound = activity;
-        // }
-    });
-
-    // fallback file with rest of the things
-    // for now saved as csv
-    if (otherLinks.length !== startSize) {
-        zip.file('other-links.csv', otherLinks , { binary: false });
-    }
-    if (casetrains.length !== startSize) {
-        zip.file('casetrains.csv', casetrains , { binary: false });
-    }
-    if (wuecasts.length !== startSize) {
-        zip.file('wuecasts.csv', otherLinks , { binary: false });
-    }
-
-
-    /* Testing creating a html element backup of course */
-    
-    // deep clone document clear head and body
+/**
+ * Deep clone current document then clear head and body
+ */
+const getBasicCleanDocumentClone = () => {
+    // 
     let doc = document.cloneNode(true);
     doc.head = document.createElement('head');
     doc.body = document.createElement('body');
+    return doc;
+}
 
-    // append inline css elements from site to backup doc
-    doc.querySelectorAll('style[type="text/css"').forEach((element) => {
-        doc.head.appendChild(element);
-    });
-
-    // append inline script elements from site to backup doc
-    doc.querySelectorAll('script:not([src]').forEach((element) => {
-        doc.head.appendChild(element);
-    });
-
+/**
+ * Adds page header of current course (name link cascade)
+ * and page content (links to all resources) to document
+ * @param {document} doc 
+ */
+const addRelevantHtmlToDoc = (doc) => {
     // add deep cloned paged header and content divs to html
     let pageHeader = document.querySelector('header#page-header').cloneNode(true);
     const archiveBtn = pageHeader.querySelector('#archiveDownloadBtn');
@@ -313,6 +133,24 @@ const archiveCourse = async () => {
 
     doc.body.appendChild(pageHeader);
     doc.body.appendChild(relevantMainContentBody);
+    return doc;
+}
+
+/**
+ * Adds external resources like scripts and css stylesheets the html depends on to document
+ * @param {document} doc 
+ * @param {any} zip 
+ */
+const addExternalResourcesToDoc = (doc, zip) => {
+    // append inline css elements from site to backup doc
+    doc.querySelectorAll('style[type="text/css"').forEach((element) => {
+        doc.head.appendChild(element);
+    });
+
+    // append inline script elements from site to backup doc
+    doc.querySelectorAll('script:not([src]').forEach((element) => {
+        doc.head.appendChild(element);
+    });
 
     // convert dependancies to array an combine
     let allCssLinks = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
@@ -341,20 +179,107 @@ const archiveCourse = async () => {
         }
         doc.head.appendChild(linkElement);
     }
+    return doc;
+}
 
 
-    // add html to zip
+// async is important else fails silently
+// TODO make faster by using https://stackoverflow.com/a/37576787 promise all and parsing, adding in paralel
+/**
+ * Resolves deeper Moodle Pages via background script because of cors to resolve links in html or 303 redirects
+ * @param {string} moodleUrl 
+ */
+const resolveDeepMoodleLinks = async (moodleUrl) => {
+    const moodleUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/url/';
+    const moodlePathSplit = moodleUrl.split('https://wuecampus2.uni-wuerzburg.de/moodle');
+    if (moodlePathSplit.length < 2) {
+        return;
+    }
+
+    const backgroundCorsRequest = {
+        action: 'corsMoodleRequest',
+        moodlePath: moodlePathSplit[1]
+    };
+    let textOrUrl = await browser.runtime.sendMessage(backgroundCorsRequest);
+    
+    if (textOrUrl && textOrUrl.includes('<html') && textOrUrl.includes('</html>')) {
+        let parser = new DOMParser();
+        let linkedDoc = parser.parseFromString(textOrUrl, 'text/html');
+        
+        // TODO have to insert here for other things than a tags like video pages and so on
+        const redirectLinkDiv = linkedDoc.querySelector('div.urlworkaround');
+        if (redirectLinkDiv) {
+            const redirectLinkAtag = redirectLinkDiv.querySelector('a');
+            if (redirectLinkAtag) {
+                if (redirectLinkAtag.href.includes(moodleUrlSchema)) {
+                    return await resolveDeepMoodleLinks(redirectLinkAtag.href);
+                } else {
+                    return redirectLinkAtag.href;
+                }
+            }
+        }
+    }
+
+    if (textOrUrl.includes(moodleUrlSchema)) {
+        return await resolveDeepMoodleLinks(redirectLinkAtag.href);
+    }
+    return textOrUrl;
+};
+
+/**
+ * Replaces moodle links with direct links to resources
+ * @param {document} doc 
+ */
+const replaceMoodleLinks = async (doc) => {
+    const moodleUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/url/';
+    const selector = 'a[href^="' + moodleUrlSchema + '"]';
+    const linkElements = doc.querySelectorAll(selector);
+
+    for (let i = 0; i < linkElements.length; i++) {
+        const element = linkElements[i];
+
+        element.href = element.href.replace('&redirect=1', '')
+        try {
+            linkElements[i].href = await resolveDeepMoodleLinks(element.href);
+        } catch(e) {
+            // console.error(e);
+        }
+    }
+
+    // TODO other moodle links like videos not just links
+
+    return doc;
+}
+
+const archiveCourse = async () => {
+    // signal user that is running
+    buttonInProgress(true);
+
+    // eslint-disable-next-line no-undef
+    let zip = new JSZip();
+
+
+    /* Testing creating a html element backup of course */
+    let doc = getBasicCleanDocumentClone();
+    doc = addRelevantHtmlToDoc(doc);
+    doc = addExternalResourcesToDoc(doc, zip);
+
+
+    doc = await replaceMoodleLinks(doc);
+
+
+
+    // add html to zip finally
     const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
     zip.file(getCourseName() + '.html', htmlWithDoctype , { binary: false });
 
     //////////////////////////////////////////
 
+    // TODO reactivate after testing
     saveCourseZip(zip, getCourseName());
 };
 
-
-console.log('should add btn');
-
+safeFileName
 // eslint-disable-next-line no-undef
 browser.runtime.sendMessage({},() => {
     var readyStateCheckInterval = setInterval(() => {
@@ -365,13 +290,3 @@ browser.runtime.sendMessage({},() => {
         }
     }, 10);
 });
-
-
-
-/* vanilla js way to download something without saveAs library
-TODO maybe go back to this own implementation as function in own script for less dependancies
-var link = document.createElement('a');
-link.href = activityFound.url;
-link.download = activityFound.name;
-link.dispatchEvent(new MouseEvent('click'));
-*/
