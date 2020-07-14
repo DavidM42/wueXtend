@@ -10,6 +10,21 @@ const waitHumanLikeTime = async (timeMs) => {
   return await new Promise((resolve) => setTimeout(() => resolve(), humanLikeWaitTime));
 }
 
+/**
+ * Helper method to write into writer and also help with debugging of edge cases and breaking files
+ * @param {any} writer The writer object to write into
+ * @param {string} path The path in the zip file to save the file to
+ * @param {ReadableStream<Uint8Array>} stream The stream to write into the file
+ */
+const writeStreamIntoZip = (writer, path, stream) => {
+  console.log('%c Will now stream into: ' + path, 'font-size: 8px; color: #33;');
+  writer.write({
+    name: path,
+    lastModified: new Date(),
+    stream: () => stream
+  });
+}
+
 // TODO smarter with CSS file and html template
 // TODO write own classes for style cause nav classes not correct here
 const downloadBtnTemplate = `
@@ -158,11 +173,7 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
   
       if (resourceResponse.ok) {
         // TODO warn if not okay instead of ignoring
-        writer.write({
-          name: path,
-          lastModified: new Date(),
-          stream: () => resourceStream
-        });
+        writeStreamIntoZip(writer,path,resourceStream);
     
         // add link to it to html
         if (linkElement.href) {
@@ -239,11 +250,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
   //   // safe filename is important else it crashes
   //   let path = 'videos/' + safeFileName(decodeURIComponent(urlParts[urlParts.length - 1]));
 
-  //   writer.write({
-  //     name: path,
-  //     lastModified: new Date(),
-  //     stream: () => textOrUrlOrStream.stream
-  //   });
+  //   writeStreamIntoZip(writer,path,textOrUrlOrStream);
   //   return path;
   // }
 
@@ -291,11 +298,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
                 const videoResponse = await fetch(realVideoUrl);
                 if (videoResponse.ok) {
                   const videoStream = videoResponse.body
-                  writer.write({
-                    name: path,
-                    lastModified: new Date(),
-                    stream: () => videoStream
-                  });
+                  writeStreamIntoZip(writer, path, videoStream);
                   return path;
                 }
               }
@@ -323,15 +326,11 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
 
             const urlParts = realVideoUrl.split('/');
             // safe filename is important else it crashes
-            let path = 'videos/' + safeFileName(decodeURIComponent(urlParts[urlParts.length - 1]));
+            let path = 'videos/' + decodeURIComponent(urlParts[urlParts.length - 1]);
 
             const videoResponse = await fetch(realVideoUrl);
             if (videoResponse.ok) {
-              writer.write({
-                name: path,
-                lastModified: new Date(),
-                stream: () => videoResponse.body
-              });
+              writeStreamIntoZip(writer,path,videoResponse.body);
               return path;
             }
           }
@@ -402,7 +401,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
         alert('Seiten Name nicht gefunden, wird übersprungen');
         return;
       }
-      let path = 'subPages/' + safeFileName(titleH2.innerText + '.html');
+      let path = 'subPages/' + safeFileName(titleH2.innerText)+ '.html';
 
       let doc = await getRelevantPageContent(writer, linkedDoc);
       doc = addLinkBackToCourseToNav(doc);
@@ -549,11 +548,7 @@ const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = 
 
         if (!foundSameBlobs) {
           // only download new one if not same files as previously
-          writer.write({
-            name: path,
-            lastModified: new Date(),
-            stream: () => fileStream
-          });
+          writeStreamIntoZip(writer,path,fileStream);
         }
 
         // THIS ONE
@@ -586,11 +581,7 @@ const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = 
  * @param {string} text Text to write into file
  */
 const addTextFileToArchive = (writer, path, text) => {
-  writer.write({
-    name: path,
-    lastModified: new Date(),
-    stream: () => new Response(text).body
-  });
+  writeStreamIntoZip(writer, path, new Response(text).body);
 }
 
 /**
