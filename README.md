@@ -22,4 +22,8 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * ESLint on and fix all the problems
 * Assignment url querySelect and archive submissied file and html of submission offline -> rip html
 * Permissions in manifest either wildcard for uni wue domain at bottom or list subdomains?
-* Videos linked like in mbg
+* one small button with videos and one bigger button to rip without videos
+* Rip whole semester / rip all wuecampus belegt button?
+* Better status update mit spinning button das noch läuft anzeigen
+* info alert popup dass seite aufbleiben muss und es paar minuten dauert alles zu laden bei videos
+* These https://wuecampus2.uni-wuerzburg.de/moodle/mod/choice/view.php?id=1421726 rip html
