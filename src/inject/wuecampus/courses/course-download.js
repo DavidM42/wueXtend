@@ -3,6 +3,7 @@
  * @param {number} timeMs Time in ms to wait for 
  */
 const waitHumanLikeTime = async (timeMs) => {
+  // TODO think about necessity of this -> probably uneeded if just await writer.writes and not start every fetch at once
   // min timeMs - 125 but never less than 1
   const min = (timeMs - 125) < 1 ? 1 : (timeMs - 250);
   const max = timeMs + 125;
@@ -12,13 +13,15 @@ const waitHumanLikeTime = async (timeMs) => {
 
 /**
  * Helper method to write into writer and also help with debugging of edge cases and breaking files
+ * returns a void promise SO AWAIT IF YOU WANT TO WAIT FOR WRITE AND NOT CONCURRENT
+ * see https://developer.mozilla.org/en-US/docs/Web/API/WritableStreamDefaultWriter/write
  * @param {any} writer The writer object to write into
  * @param {string} path The path in the zip file to save the file to
  * @param {ReadableStream<Uint8Array>} stream The stream to write into the file
  */
 const writeStreamIntoZip = (writer, path, stream) => {
   console.log('%c Will now stream into: ' + path, 'font-size: 8px; color: #33;');
-  writer.write({
+  return writer.write({
     name: path,
     lastModified: new Date(),
     stream: () => stream
@@ -198,7 +201,7 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
       doc.head.appendChild(linkElement);
     }
 
-    await waitHumanLikeTime(250);
+    await waitHumanLikeTime(150);
   }
   return doc;
 }
@@ -206,12 +209,17 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
 /**
  * Changes link in nav bar at top to index html from backup
  * @param {*} doc 
+ * @param {boolean} alreadyOn If this page of doc is already main page so only link #
  */
-const addLinkBackToCourseToNav = (doc) => {
+const addLinkBackToCourseToNav = (doc, alreadyOn = false) => {
   const courseNavItemA = doc.querySelector('nav[role="navigation"] li.breadcrumb-item:nth-child(3) > a');
   if (courseNavItemA) {
-    const indexHtmlFileName = safeFileName(getCourseName()) + '.html';
-    courseNavItemA.href = '../' + indexHtmlFileName;
+    if (alreadyOn) {
+      courseNavItemA.href = '#';
+    } else {
+      const indexHtmlFileName = safeFileName(getCourseName()) + '.html';
+      courseNavItemA.href = '../' + indexHtmlFileName;
+    }
   }
   return doc;
 }
@@ -298,7 +306,9 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
                 const videoResponse = await fetch(realVideoUrl);
                 if (videoResponse.ok) {
                   const videoStream = videoResponse.body
-                  writeStreamIntoZip(writer, path, videoStream);
+                  // await the write promise here else it overloads write process with concurrent streams
+                  // videos are just to large and bitrate for many concurrent -> also way faster apparently to just stream 1 than like 3-5 at once
+                  await writeStreamIntoZip(writer, path, videoStream);
                   return path;
                 }
               }
@@ -330,7 +340,9 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
 
             const videoResponse = await fetch(realVideoUrl);
             if (videoResponse.ok) {
-              writeStreamIntoZip(writer,path,videoResponse.body);
+                // await the write promise here else it overloads write process with concurrent streams
+                // videos are just to large and bitrate for many concurrent -> also way faster apparently to just stream 1 than like 3-5 at once
+              await writeStreamIntoZip(writer,path,videoResponse.body);
               return path;
             }
           }
@@ -426,7 +438,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
 const replaceMoodleDeepLinks = async (writer, doc) => {
   const moodleUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/url/';
   // TODO fix and reactivate URL downloads
-  const moodleVideoUrlSchema = 'ZZZZZZhttps://wuecampus2.uni-wuerzburg.de/moodle/mod/lti/';
+  const moodleVideoUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/lti/';
   const moodlePageLinkUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/page/';
   const moodleFolderUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/folder/';
   const moodleRatingAllocateUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/ratingallocate/';
@@ -453,13 +465,10 @@ const replaceMoodleDeepLinks = async (writer, doc) => {
     //   element.href += '&redirect=1';
     // }
 
-    try {
-      const returnedPath = await resolveDeepMoodleLinks(writer, element.href);
-      linkElements[i].href = returnedPath;
-    } catch (e) {
-      // console.error(e);
-    }
-    await waitHumanLikeTime(250);
+    const returnedPath = await resolveDeepMoodleLinks(writer, element.href);
+    linkElements[i].href = returnedPath;
+
+    await waitHumanLikeTime(150);
   }
 
   return doc;
@@ -529,7 +538,9 @@ const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = 
           for (let i = 0; i < alreadyExistingPath.length; i++) {
             if (alreadyExistingPath[i] === path) {
               let previousDownloadBlob = await fetch(alreadyExitingPathUrlSame[i]).then((r) => r.blob());
-              let currentDownloadBlob = await fileResponse.blob();
+              // habe to clone fileResponse because `fileStream = fileResponse.body` locks response
+              // see https://stackoverflow.com/a/54115314
+              let currentDownloadBlob = await fileResponse.clone().blob();
 
               // check if blobs are same size
               if (previousDownloadBlob.size === currentDownloadBlob.size) {
@@ -548,7 +559,7 @@ const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = 
 
         if (!foundSameBlobs) {
           // only download new one if not same files as previously
-          writeStreamIntoZip(writer,path,fileStream);
+          await writeStreamIntoZip(writer,path,fileStream);
         }
 
         // THIS ONE
@@ -568,7 +579,7 @@ const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = 
     } catch (e) {
       console.error(e);
     }
-    await waitHumanLikeTime(250);
+    await waitHumanLikeTime(150);
   }
 
   return doc;
@@ -581,6 +592,8 @@ const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = 
  * @param {string} text Text to write into file
  */
 const addTextFileToArchive = (writer, path, text) => {
+  // don't await wrie here because it's just text files so not that much bandwidth
+  // can handle multiple concurrent
   writeStreamIntoZip(writer, path, new Response(text).body);
 }
 
@@ -616,8 +629,10 @@ const archiveCourse = async () => {
   doc = await replaceMoodleDeepLinks(writer, doc);
 
   // TODO reactivate
-  // doc = await downloadReplaceSmallFileLinks(writer, doc);
+  doc = await downloadReplaceSmallFileLinks(writer, doc);
 
+  // one small fix
+  doc = addLinkBackToCourseToNav(doc,true);
   // add html to zip finally
   const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
   const htmlFileName = safeFileName(getCourseName()) + '.html';
