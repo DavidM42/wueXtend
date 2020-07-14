@@ -1,3 +1,14 @@
+// TODO smarter with CSS file and html template
+// TODO write own classes for style cause nav classes not correct here
+// almost same code as enrollment button
+const archiveNavButtonTemplate = `
+<div class="studentdash nav-item nav-link" style="padding: 0 3px 0 2px;" id="archiveDownloadBtn">
+    <a role="button" title="Download Course Archive" class="btn btn-secondary fhs-tooltip">
+        <i id="archiveDownloadIcon" class="fa fa-download" style="color: #FFF;"></i>
+    </a>
+</div>
+`;
+
 /**
  * Simple async await wrapper to wait some random time between requests to avoid blocking
  * @param {number} timeMs Time in ms to wait for 
@@ -28,22 +39,21 @@ const writeStreamIntoZip = (writer, path, stream) => {
   });
 }
 
-// TODO smarter with CSS file and html template
-// TODO write own classes for style cause nav classes not correct here
-const downloadBtnTemplate = `
-<div class="studentdash nav-item nav-link" style="padding: 0 3px 0 2px;">
-    <a role="button" title="" class="btn btn-secondary fhs-tooltip" id="archiveDownloadBtn">
-        <i class="fa fa-download" style="color: #FFF;" id="archiveDownloadIcon"> Archive</i>
-    </a>
-</div>
-`;
 
 // TODO two buttons one button with videos one without
 const addArchiveDownloadBtn = () => {
-  // TODO fix only having one button never more than one
   const existingArchiveBtn = document.getElementById('archiveDownloadBtn');
   if (existingArchiveBtn) {
     existingArchiveBtn.remove();
+  }
+
+  const courseControls = document.getElementsByClassName('coursecontrols');
+  if (courseControls.length === 1) {
+      courseControls[0].innerHTML += archiveNavButtonTemplate;
+
+      // and assign onclick archive to btn
+      const newArchiveBtn = document.getElementById('archiveDownloadBtn');
+      newArchiveBtn.onclick = archiveCourse;
   }
 
   const dFlexes = document.getElementById('page-header').getElementsByClassName('d-flex');
@@ -53,7 +63,6 @@ const addArchiveDownloadBtn = () => {
 
     // and onclick event to download
     const archiveBtn = document.getElementById('archiveDownloadBtn');
-    archiveBtn.onclick = archiveCourse;
   }
 };
 
