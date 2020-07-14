@@ -1,7 +1,4 @@
 // eslint-disable-next-line no-undef
-if (!browserPolyFill) {
-    let browserPolyFill = browser;
-}
 
 const onCredsGot = (credsObj) => {
     const autoLogin = credsObj.autoLogin;
@@ -29,17 +26,17 @@ const onCredsGot = (credsObj) => {
     }
 };
 
-const onError = (error) => {
+const onLoginRedirectError = (error) => {
     console.log(`Error: ${error}`);
 };
 
-browserPolyFill.runtime.sendMessage({},() => {
+browser.runtime.sendMessage({},() => {
     var readyStateCheckInterval = setInterval(() => {
         if (document.readyState === 'complete') {
             clearInterval(readyStateCheckInterval);
 
-            const getPromise = browserPolyFill.storage.local.get(['autoLogin']);
-            getPromise.then(onCredsGot).catch(onError);
+            const getPromise = browser.storage.local.get(['autoLogin']);
+            getPromise.then(onCredsGot).catch(onLoginRedirectError);
         }
     }, 10);
 });

@@ -1,9 +1,6 @@
-// eslint-disable-next-line no-undef
-const browserPolyFill = browser;
-
 // import { saveSettings } from '../credentials.js';
 const saveSettings = (usernameIn,passwordIn) => {
-    browserPolyFill.storage.local.set({
+    browser.storage.local.set({
         username: usernameIn.toLowerCase(),
         password: passwordIn,
         // TODO opt in or optout?
@@ -126,11 +123,11 @@ const onCredsGot = (credsObj) => {
 
 };
 
-const onError = (error) => {
+const onAnyPageError = (error) => {
     console.log(`Error: ${error}`);
 };
 
-browserPolyFill.runtime.sendMessage({},() => {
+browser.runtime.sendMessage({},() => {
     var readyStateCheckInterval = setInterval(() => {
         if (document.readyState === 'complete') {
             clearInterval(readyStateCheckInterval);
@@ -138,8 +135,8 @@ browserPolyFill.runtime.sendMessage({},() => {
             // handle login if not logged in
             // would like sync storagearea not local but android firefox does not support I think
             // need storage permission
-            const getPromise = browserPolyFill.storage.local.get(['username', 'password', 'autoLogin']);
-            getPromise.then(onCredsGot).catch(onError);
+            const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
+            getPromise.then(onCredsGot).catch(onAnyPageError);
         }
     }, 10);
 });
