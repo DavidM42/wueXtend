@@ -86,9 +86,7 @@ const buttonInProgress = (inProgressBool) => {
 
 const safeFileName = (inString) => {
   // i dont even know what the difference here is but had errors even though looks same -> probs some encoding error
-  inString = inString.replace('ö', 'ö');
-
-  // TODO manually replace üöä in small and big format
+  inString = inString.replaceAll('ö', 'ö');
 
   // umlaut boogaloo
   // inString = inString.replace('ö', 'oe').replace('ä', 'ae').replace('ü', 'ue').replace('ß', 'ss');
@@ -96,7 +94,8 @@ const safeFileName = (inString) => {
 
   // TODO is temp simple solution thanks to https://stackoverflow.com/a/8485137 maybe safer way usable in client side js
   // including umlaut boogaloo so doesnt get -
-  return inString.replace(/[^a-z0-9äöüß]/gi, '-').replace(' ', '_');
+  // For - surrounded by e.g. spaces it replaces "dwdwd - dwdw " with "dwdwd---dwdw" and then "dwdwd-dwdw"
+  return inString.replace(/[^a-z0-9äöüß()+]/gi, '-').replaceAll(' ', '_').replaceAll('---', '-');
 };
 
 const getCourseName = () => {
