@@ -12,7 +12,7 @@
   "default_locale": "de",
   "background": {
     "scripts": [
-      "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
+      "npm_scripts/browser-polyfill.min.js",
       "src/bg/background.js"
     ]
   },
@@ -26,16 +26,10 @@
     "default_popup": "src/browser_action/browser_action.html"
   },
   "permissions": [
-    "contextMenus",
-    "cookies",
-    "notifications",
-    "tabs",
     "storage",
-    "https://wuecampus2.uni-wuerzburg.de/moodle/",
-    "https://wuestudy.zv.uni-wuerzburg.de/",
-    "https://psywue.sona-systems.com/",
-    "https://www.uni-wuerzburg.de/",
-    "http://www.mcm.uni-wuerzburg.de/startseite/"
+    "https://psywue.sona-systems.com/*",
+    "https://*.uni-wuerzburg.de/*",
+    "https://uni-wuerzburg.zoom.us/*"
   ],
   "content_scripts": [
     {
@@ -43,7 +37,7 @@
         "https://wuel.de/*"
       ],
       "js": [
-        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
+        "npm_scripts/browser-polyfill.min.js",
         "src/inject/extensionEnabled.js"
       ]
     },
@@ -52,27 +46,36 @@
         "https://wüx.de/*"
       ],
       "js": [
-        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
+        "npm_scripts/browser-polyfill.min.js",
         "src/inject/extensionEnabled.js"
       ]
     },
 
     {
       "matches": [
+        "https://wuecampus2.uni-wuerzburg.de/moodle/*"
+      ],
+      "js": [
+        "npm_scripts/browser-polyfill.min.js",
+        "src/inject/wuecampus/loginRedirect.js"
+      ]
+    },
+    {
+      "matches": [
         "https://wuecampus2.uni-wuerzburg.de/moodle/login/index.php"
       ],
       "js": [
-        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
+        "npm_scripts/browser-polyfill.min.js",
         "src/inject/wuecampus/loginPage.js"
       ]
     },
     {
       "matches": [
-        "https://wuecampus2.uni-wuerzburg.de/moodle/*"
+        "https://wuecampus2.uni-wuerzburg.de/moodle/"
       ],
       "js": [
-        "node_modules/webextension-polyfill/dist/browser-polyfill.js",
-        "src/inject/wuecampus/loginRedirect.js"
+        "npm_scripts/browser-polyfill.min.js",
+        "src/inject/wuecampus/homepageCourseHighlight.js"
       ]
     },
     {
@@ -80,10 +83,11 @@
         "https://wuecampus2.uni-wuerzburg.de/moodle/course/*"
       ],
       "js": [
-        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
-        "node_modules/file-saver/dist/FileSaver.min.js",
-        "node_modules/jszip/dist/jszip.min.js",
-        "node_modules/jszip-utils/dist/jszip-utils.min.js",
+        "npm_scripts/browser-polyfill.min.js",
+        "npm_scripts/web-streams-polyfill.es6.min.js",
+        "npm_scripts/pako.min.js",
+        "npm_scripts/StreamSaver.js",
+        "npm_scripts/transcend-io-conflux.js",
         "src/inject/wuecampus/courses/enrollment-button.js",
         "src/inject/wuecampus/courses/course-download.js"
       ],
@@ -96,7 +100,7 @@
         "https://wuestudy.zv.uni-wuerzburg.de/*"
       ],
       "js": [
-        "node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
+        "npm_scripts/browser-polyfill.min.js",
         "src/inject/wuestudy/anyPage.js"
       ]
     }

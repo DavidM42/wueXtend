@@ -31,16 +31,8 @@
     "default_popup": "src/browser_action/browser_action.html"
   },
   "permissions": [
-    "contextMenus",
-    "cookies",
-    "notifications",
-    "tabs",
     "storage",
-    "https://wuecampus2.uni-wuerzburg.de/moodle/*",
-    "https://wuestudy.zv.uni-wuerzburg.de/*",
     "https://psywue.sona-systems.com/*",
-    "https://www.uni-wuerzburg.de/*",
-    "http://www.mcm.uni-wuerzburg.de/startseite/*",
     "https://*.uni-wuerzburg.de/*",
     "https://uni-wuerzburg.zoom.us/*"
   ],

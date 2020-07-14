@@ -21,7 +21,6 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * Review requested permission
 * ESLint on and fix all the problems
 * Assignment url querySelect and archive submissied file and html of submission offline -> rip html
-* Permissions in manifest either wildcard for uni wue domain at bottom or list subdomains?
 * one small button with videos and one bigger button to rip without videos
 * Rip whole semester / rip all wuecampus belegt button?
 * Better status update mit spinning button das noch läuft anzeigen
