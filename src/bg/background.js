@@ -14,6 +14,14 @@ browser.runtime.onMessage.addListener( async (request, sender, sendResponse) => 
             let response = await fetch(requestUrl); //, { redirect: "error" }
 
             if (response) {
+                // was an idea but stopped with this
+                // if (response.headers.get('Content-Type').includes('video')){
+                //     return {
+                //         streamUrl: response.url,
+                //         stream: response.body
+                //     };
+                // }
+
                 if (!response.url.includes('https://wuecampus2.uni-wuerzburg.de/')) {
                     return response.url;
                 }

@@ -36,11 +36,13 @@
     "notifications",
     "tabs",
     "storage",
-    "https://wuecampus2.uni-wuerzburg.de/moodle/",
-    "https://wuestudy.zv.uni-wuerzburg.de/",
-    "https://psywue.sona-systems.com/",
-    "https://www.uni-wuerzburg.de/",
-    "http://www.mcm.uni-wuerzburg.de/startseite/"
+    "https://wuecampus2.uni-wuerzburg.de/moodle/*",
+    "https://wuestudy.zv.uni-wuerzburg.de/*",
+    "https://psywue.sona-systems.com/*",
+    "https://www.uni-wuerzburg.de/*",
+    "http://www.mcm.uni-wuerzburg.de/startseite/*",
+    "https://*.uni-wuerzburg.de/*",
+    "https://uni-wuerzburg.zoom.us/*"
   ],
   "content_scripts": [
     {
@@ -86,9 +88,10 @@
       ],
       "js": [
         "npm_scripts/browser-polyfill.min.js",
-        "npm_scripts/FileSaver.min.js",
-        "npm_scripts/jszip.min.js",
-        "npm_scripts/jszip-utils.min.js",
+        "npm_scripts/web-streams-polyfill.es6.min.js",
+        "npm_scripts/pako.min.js",
+        "npm_scripts/StreamSaver.js",
+        "npm_scripts/transcend-io-conflux.js",
         "src/inject/wuecampus/courses/enrollment-button.js",
         "src/inject/wuecampus/courses/course-download.js"
       ],

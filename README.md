@@ -20,6 +20,6 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * Define one naming scheme for all files and rename them
 * Review requested permission
 * ESLint on and fix all the problems
-* Normal files like pdfs
-* Bigger files videos
-* assignment url querySelect and archive submissied file and html of submission offline
+* Assignment url querySelect and archive submissied file and html of submission offline -> rip html
+* Permissions in manifest either wildcard for uni wue domain at bottom or list subdomains?
+* Videos linked like in mbg

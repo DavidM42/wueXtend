@@ -11,7 +11,7 @@ const saveSettings = () => {
 
 // prefills field with values from storage
 const preloadFieldsValue = (credsObj) => {
-    console.log(credsObj);
+    // console.log(credsObj);
     if (credsObj.username !== undefined) {
         document.getElementById('username').value = credsObj.username;
     }

@@ -37,8 +37,8 @@ const ripPasswordsFromForm = () => {
 
 // TODO write central js file for getting credentials from storage to use in this and wuestudy
 const onCredsGot = (credsObj) => {
-    console.log('got creds');
-    console.log(credsObj);
+    // console.log('got creds');
+    // console.log(credsObj);
     const username = credsObj.username;
     const password = credsObj.password;
     const autoLogin = credsObj.autoLogin;

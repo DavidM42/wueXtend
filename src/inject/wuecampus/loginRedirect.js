@@ -1,5 +1,7 @@
 // eslint-disable-next-line no-undef
-const browserPolyFill = browser;
+if (!browserPolyFill) {
+    let browserPolyFill = browser;
+}
 
 const onCredsGot = (credsObj) => {
     const autoLogin = credsObj.autoLogin;
