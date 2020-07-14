@@ -12,14 +12,14 @@ const archiveNavButtonTemplate = `
 /**
  * Simple async await wrapper to wait some random time between requests to avoid blocking
  * @param {number} timeMs Time in ms to wait for 
+ * @Depcrecated Was not needed just use requests more sequentially and await last
  */
 const waitHumanLikeTime = async (timeMs) => {
-  // TODO think about necessity of this -> probably uneeded if just await writer.writes and not start every fetch at once
   // min timeMs - 125 but never less than 1
   const min = (timeMs - 125) < 1 ? 1 : (timeMs - 250);
   const max = timeMs + 125;
   const humanLikeWaitTime = Math.random() * (max - min) + min
-  return await new Promise((resolve) => setTimeout(() => resolve(), humanLikeWaitTime));
+  return new Promise((resolve) => setTimeout(() => resolve(), humanLikeWaitTime));
 }
 
 /**
@@ -88,6 +88,8 @@ const safeFileName = (inString) => {
   // i dont even know what the difference here is but had errors even though looks same -> probs some encoding error
   inString = inString.replace('ö', 'ö');
 
+  // TODO manually replace üöä in small and big format
+
   // umlaut boogaloo
   // inString = inString.replace('ö', 'oe').replace('ä', 'ae').replace('ü', 'ue').replace('ß', 'ss');
   // inString = inString.replace('Ö', 'Oe').replace('Ä', 'Ae').replace('Ü', 'Ue');
@@ -136,6 +138,8 @@ const addRelevantHtmlToDoc = (inputDoc, resultDoc) => {
     archiveBtn.remove();
   }
   let relevantMainContentBody = inputDoc.querySelector('section#region-main').cloneNode(true);
+
+  // TODO find every image[src] so every image with a source -> download image and relink to local
 
   resultDoc.body.appendChild(pageHeader);
   resultDoc.body.appendChild(relevantMainContentBody);
@@ -210,7 +214,7 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
       doc.head.appendChild(linkElement);
     }
 
-    await waitHumanLikeTime(150);
+    // await waitHumanLikeTime(150);
   }
   return doc;
 }
@@ -275,7 +279,10 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
     let parser = new DOMParser();
     let linkedDoc = parser.parseFromString(textOrUrlOrStream, 'text/html');
 
-    /* URL Redirect Replace PART */
+    /* 
+      URL Redirect Replace PART 
+      Requires url to be read from html and given back to relink web url at main page
+    */
     const redirectLinkDiv = linkedDoc.querySelector('div.urlworkaround');
     if (redirectLinkDiv) {
       const redirectLinkAtag = redirectLinkDiv.querySelector('a');
@@ -288,7 +295,10 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       }
     }
 
-    /* One Video Type REPLACE PART */
+    /* 
+      One Video Type REPLACE PART
+      Requires mp4 video to be found by clicking through dubious moodle forms, download mp4 and give local url to relink back
+    */
     const videoIframe = linkedDoc.querySelector('iframe#contentframe');
     if (videoIframe) {
       const videoIntitateFrameSrcUrl = videoIframe.src;
@@ -330,7 +340,11 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
     }
 
 
-    /* Other mediaplayer js plugin replace part */
+    /* 
+      Other mediaplayer js plugin replace part 
+      Requires video url to be found from some source tag, downloaded, html ripped for sub page and video in it relinked
+      Then returns link to local sub page to relink in main page
+    */
     const videoPluginDiv = linkedDoc.querySelector('div.mediaplugin_videojs');
     if (videoPluginDiv) {
 
@@ -383,25 +397,40 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
     }
     
 
-    /* Folder Part */
+    /*
+      Folder Part and assignment pages 
+      Both require html to be ripped and linked pluginfiles to be ripped and relinked
+    */
     const foldertreeDiv = linkedDoc.querySelector('div.foldertree');
-    if (foldertreeDiv) {
+    const submissionsTableDiv = linkedDoc.querySelector('div.submissionstatustable');
+    if (foldertreeDiv || submissionsTableDiv) {
       // TODO do something like this
       // return backupFolder(writer,linkedDoc, doc);
 
-      const titleH2 = linkedDoc.querySelector('#region-main > div[role="main"] > h2');
-      if (!titleH2) {
-        // TODO error handling
-        alert('Seiten Name nicht gefunden, wird übersprungen');
+      const navBarLastItemTitle = linkedDoc.querySelector('div#page-navbar > nav > ul > li:last-of-type > a');
+      if (navBarLastItemTitle)  {
+        navBarLastItemTitle.href = '#';
+      }
+
+      const contentTitleH2 = linkedDoc.querySelector('#region-main > div[role="main"] > h2');
+      const header = contentTitleH2 || navBarLastItemTitle;
+      if (!header) {
+        console.warn('Seiten Name nicht gefunden, wird übersprungen: ' + moodleUrl);
+        debugger;
         return;
       }
-      let path = 'folderPages/' + safeFileName(titleH2.innerText + '.html');
+
+      let path = 'folderPages/';
+      if (!foldertreeDiv && submissionsTableDiv) {
+        path = "submissions/"
+      }
+      path += safeFileName(header.innerText + '.html');
 
       // start doc
       let doc = await getRelevantPageContent(writer, linkedDoc);
 
-      // get linked files in folder
-      doc = await downloadReplaceSmallFileLinks(writer, doc, '../');
+      // get linked files in folder/assignment
+      doc = await downloadReplaceDirectLinkedFileLinks(writer, doc, '../');
       doc = addLinkBackToCourseToNav(doc);
 
       // convert to html and save
@@ -411,18 +440,27 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
     }
 
 
-    /* Page and Rating allocate Download Part */
-    // generalPageBox kind of a fallback since things like folder also use it
+    /* 
+      Page and Rating allocate Download Part 
+      Both require html to be ripped, files linked there to be downloaded linked in sub page and local link to subpage given back to relink
+    */
+    // generalPageBox kind of a fallback since things like folder or choice also contain it
     const generalPageBox = linkedDoc.querySelector('.generalbox');
     const choiceStatusTable = linkedDoc.querySelector('div.choicestatustable');
     if (generalPageBox || choiceStatusTable) {
-      const titleH2 = linkedDoc.querySelector('#region-main > div[role="main"] > h2');
-      if (!titleH2) {
-        // TODO error handling
-        alert('Seiten Name nicht gefunden, wird übersprungen');
+      const navBarLastItemTitle = linkedDoc.querySelector('div#page-navbar > nav > ul > li:last-of-type > a');
+      if (navBarLastItemTitle)  {
+        navBarLastItemTitle.href = '#';
+      }
+
+      const contentTitleH2 = linkedDoc.querySelector('#region-main > div[role="main"] > h2');
+      const header = contentTitleH2 || navBarLastItemTitle;
+      if (!header) {
+        console.warn('Seiten Name nicht gefunden, wird übersprungen: ' + moodleUrl);
+        debugger;
         return;
       }
-      let path = 'subPages/' + safeFileName(titleH2.innerText)+ '.html';
+      let path = 'subPages/' + safeFileName(header.innerText)+ '.html';
 
       let doc = await getRelevantPageContent(writer, linkedDoc);
       doc = addLinkBackToCourseToNav(doc);
@@ -445,18 +483,33 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
  * @param {document} doc The document of the course containing links which shoudl be local ones
  */
 const replaceMoodleDeepLinks = async (writer, doc) => {
-  const moodleUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/url/';
-  // TODO fix and reactivate URL downloads
-  const moodleVideoUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/lti/';
-  const moodlePageLinkUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/page/';
-  const moodleFolderUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/folder/';
-  const moodleRatingAllocateUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/ratingallocate/';
+  const moodleUrlStart = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/'
 
-  // selector to both select url and video link a tags
-  const urlAndVideoUrlTypeSelector = `a[href^="${moodleUrlSchema}"], a[href^="${moodleVideoUrlSchema}"], a[href^="${moodlePageLinkUrlSchema}"], a[href^="${moodleFolderUrlSchema}"], a[href^="${moodleRatingAllocateUrlSchema}"]`;
-  
+  // Add new supported url types to query here
+  const supportedMoodleUrlSchemes = {
+    // TODO stop data save mode and reactivate
+    urlSchema: 'url/',
+    videoUrlSchema: 'lti/',
+    pageLinkUrlSchema: 'page/',
+    folderUrlSchema: 'folder/',
+    ratingAllocateUrlSchema : 'ratingallocate/',
+    choiceUrlSchema: 'choice/',
+    assignUrlSchema: 'assign/'
+  }
+
+  // construct selector that selects all links for all supported schemes
+  // selectors like these `a[href^="https://wuecampus2.uni-wuerzburg.de/moodle/mod/folder/"], ` combined with commas
+  let urlAndVideoUrlTypeSelector = '';
+  let allUrls = Object.values(supportedMoodleUrlSchemes);
+  for (let i = 0; i < allUrls.length; i++) {
+    if (i > 0) {
+      urlAndVideoUrlTypeSelector += ', ';
+    }
+    const combinedUrl = moodleUrlStart + allUrls[i];
+    urlAndVideoUrlTypeSelector += `a[href^="${combinedUrl}"]`
+  }
+
   const linkElements = doc.querySelectorAll(urlAndVideoUrlTypeSelector);
-
   for (let i = 0; i < linkElements.length; i++) {
     const element = linkElements[i];
 
@@ -477,7 +530,7 @@ const replaceMoodleDeepLinks = async (writer, doc) => {
     const returnedPath = await resolveDeepMoodleLinks(writer, element.href);
     linkElements[i].href = returnedPath;
 
-    await waitHumanLikeTime(150);
+    // await waitHumanLikeTime(150);
   }
 
   return doc;
@@ -490,7 +543,7 @@ const replaceMoodleDeepLinks = async (writer, doc) => {
  * @param {string} localFileLinkPrefix Prefix for local files linked. Used by web pages in sub folders to get back to root
  * @return {Promise<document>}
  */
-const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = '') => {
+const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPrefix = '') => {
   const moodleResourceViewUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/resource/view.php?';
   const moodleResourcePhpUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/pluginfile.php/';
   // selector to both select url and video link a tags
@@ -588,7 +641,7 @@ const downloadReplaceSmallFileLinks = async (writer, doc, localFileLinkPrefix = 
     } catch (e) {
       console.error(e);
     }
-    await waitHumanLikeTime(150);
+    // await waitHumanLikeTime(150);
   }
 
   return doc;
@@ -638,7 +691,7 @@ const archiveCourse = async () => {
   doc = await replaceMoodleDeepLinks(writer, doc);
 
   // TODO reactivate
-  doc = await downloadReplaceSmallFileLinks(writer, doc);
+  doc = await downloadReplaceDirectLinkedFileLinks(writer, doc);
 
   // one small fix
   doc = addLinkBackToCourseToNav(doc,true);
