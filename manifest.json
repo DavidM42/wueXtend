@@ -66,6 +66,15 @@
 
     {
       "matches": [
+        "https://wuecampus2.uni-wuerzburg.de/moodle/*"
+      ],
+      "js": [
+        "npm_scripts/browser-polyfill.min.js",
+        "src/inject/wuecampus/loginRedirect.js"
+      ]
+    },
+    {
+      "matches": [
         "https://wuecampus2.uni-wuerzburg.de/moodle/login/index.php"
       ],
       "js": [
@@ -75,11 +84,11 @@
     },
     {
       "matches": [
-        "https://wuecampus2.uni-wuerzburg.de/moodle/*"
+        "https://wuecampus2.uni-wuerzburg.de/moodle/"
       ],
       "js": [
         "npm_scripts/browser-polyfill.min.js",
-        "src/inject/wuecampus/loginRedirect.js"
+        "src/inject/wuecampus/homepageCourseHighlight.js"
       ]
     },
     {
