@@ -49,11 +49,11 @@ const addArchiveDownloadBtn = () => {
 
   const courseControls = document.getElementsByClassName('coursecontrols');
   if (courseControls.length === 1) {
-      courseControls[0].innerHTML += archiveNavButtonTemplate;
+    courseControls[0].innerHTML += archiveNavButtonTemplate;
 
-      // and assign onclick archive to btn
-      const newArchiveBtn = document.getElementById('archiveDownloadBtn');
-      newArchiveBtn.onclick = archiveCourse;
+    // and assign onclick archive to btn
+    const newArchiveBtn = document.getElementById('archiveDownloadBtn');
+    newArchiveBtn.onclick = archiveCourse;
   }
 
   const dFlexes = document.getElementById('page-header').getElementsByClassName('d-flex');
@@ -180,16 +180,16 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
     // TODO not safe filename here okay? probably if url safe also file name safe?
     const path = 'websources/' + decodeURIComponent(pathArray[1]);
 
-  
+
     if (!alreadyDownloadedExternalSources.includes(source)) {
       // download and links js/css
       const resourceResponse = await fetch(source);
       const resourceStream = resourceResponse.body;
-  
+
       if (resourceResponse.ok) {
         // TODO warn if not okay instead of ignoring
-        writeStreamIntoZip(writer,path,resourceStream);
-    
+        writeStreamIntoZip(writer, path, resourceStream);
+
         // add link to it to html
         if (linkElement.href) {
           linkElement.href = path;
@@ -265,7 +265,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
   //     return;
   //   }
   //   TEST_ONLY_ONE_VIDEO = true;
-    
+
   //   const urlParts = textOrUrlOrStream.streamUrl.split('/');
   //   // safe filename is important else it crashes
   //   let path = 'videos/' + safeFileName(decodeURIComponent(urlParts[urlParts.length - 1]));
@@ -362,9 +362,9 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
 
             const videoResponse = await fetch(realVideoUrl);
             if (videoResponse.ok) {
-                // await the write promise here else it overloads write process with concurrent streams
-                // videos are just to large and bitrate for many concurrent -> also way faster apparently to just stream 1 than like 3-5 at once
-              await writeStreamIntoZip(writer,path,videoResponse.body);
+              // await the write promise here else it overloads write process with concurrent streams
+              // videos are just to large and bitrate for many concurrent -> also way faster apparently to just stream 1 than like 3-5 at once
+              await writeStreamIntoZip(writer, path, videoResponse.body);
               return path;
             }
           }
@@ -394,7 +394,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       // addTextFileToArchive(writer, path, htmlWithDoctype)
       // return path;
     }
-    
+
 
     /*
       Folder Part and assignment pages 
@@ -408,7 +408,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       // return backupFolder(writer,linkedDoc, doc);
 
       const navBarLastItemTitle = linkedDoc.querySelector('div#page-navbar > nav > ul > li:last-of-type > a');
-      if (navBarLastItemTitle)  {
+      if (navBarLastItemTitle) {
         navBarLastItemTitle.href = '#';
       }
 
@@ -448,7 +448,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
     const choiceStatusTable = linkedDoc.querySelector('div.choicestatustable');
     if (generalPageBox || choiceStatusTable) {
       const navBarLastItemTitle = linkedDoc.querySelector('div#page-navbar > nav > ul > li:last-of-type > a');
-      if (navBarLastItemTitle)  {
+      if (navBarLastItemTitle) {
         navBarLastItemTitle.href = '#';
       }
 
@@ -458,7 +458,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
         console.warn('Seiten Name nicht gefunden, wird übersprungen: ' + moodleUrl);
         return;
       }
-      let path = 'subPages/' + safeFileName(header.innerText)+ '.html';
+      let path = 'subPages/' + safeFileName(header.innerText) + '.html';
 
       let doc = await getRelevantPageContent(writer, linkedDoc);
       doc = addLinkBackToCourseToNav(doc);
@@ -490,7 +490,7 @@ const replaceMoodleDeepLinks = async (writer, doc) => {
     videoUrlSchema: 'lti/',
     pageLinkUrlSchema: 'page/',
     folderUrlSchema: 'folder/',
-    ratingAllocateUrlSchema : 'ratingallocate/',
+    ratingAllocateUrlSchema: 'ratingallocate/',
     choiceUrlSchema: 'choice/',
     assignUrlSchema: 'assign/',
     lightboxGallerUrlSchema: 'lightboxgallery/',
@@ -581,7 +581,7 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
       if (fileResponse.ok) {
         // gets name from file url not activity name
         const fileNameSplit = fileResponse.url.split('/');
-        
+
         let fileEnding = fileNameSplit[fileNameSplit.length - 1].split('.')[1];
         // make sure to not include query like ?forcedownload
         const splitQueryEnding = fileEnding.split('?');
@@ -589,7 +589,7 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
 
         // check agains array of names already used to not create duplicates
         let fileName = decodeURIComponent(fileNameSplit[fileNameSplit.length - 1].split('.')[0]);
-        
+
         // safe filename is important else it crashes
         let path = 'Dateien/' + safeFileName(fileName) + '.' + fileEnding;
 
@@ -626,7 +626,7 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
 
         if (!foundSameBlobs) {
           // only download new one if not same files as previously
-          await writeStreamIntoZip(writer,path,fileStream);
+          await writeStreamIntoZip(writer, path, fileStream);
         }
 
         // THIS ONE
@@ -636,7 +636,7 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
         // }
 
         linkElements[i].href = localFileLinkPrefix + path;
-        linkElements[i].setAttribute('onClick','');
+        linkElements[i].setAttribute('onClick', '');
 
 
         // save path and url downloaded to compare later
@@ -686,7 +686,7 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
       if (fileResponse.ok) {
         // gets name from file url not activity name
         const fileNameSplit = fileResponse.url.split('/');
-        
+
         let fileEnding = fileNameSplit[fileNameSplit.length - 1].split('.')[1];
         if (fileEnding) {
           // make sure to not include query like ?forcedownload
@@ -695,7 +695,7 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
         } else {
           const contentType = fileResponse.headers.get('Content-Type');
           // got from here https://stackoverflow.com/a/48704300 maybe see again when audio or video may be needed
-          switch(contentType) {
+          switch (contentType) {
             case 'image/gif':
               fileEnding = 'gif'
               break;
@@ -720,13 +720,13 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
 
         // check agains array of names already used to not create duplicates
         let fileName = decodeURIComponent(fileNameSplit[fileNameSplit.length - 1].split('.')[0]);
-        
+
         // safe filename is important else it crashes
         let path = 'webImages/' + safeFileName(fileName) + '.' + fileEnding;
 
         if (!alreadyExistingPaths.includes(path)) {
           // only download new one if not same files as previously
-          await writeStreamIntoZip(writer,path,fileStream);
+          await writeStreamIntoZip(writer, path, fileStream);
         }
 
         toBackupElements[i].src = localFileLinkPrefix + path;
@@ -763,7 +763,7 @@ const addTextFileToArchive = (writer, path, text) => {
 const getRelevantPageContent = async (writer, inputDoc) => {
   let doc = getBasicCleanDocumentClone(inputDoc);
   doc = addRelevantHtmlToDoc(inputDoc, doc);
-  doc = await addExternalResourcesToDoc(writer,inputDoc, doc);
+  doc = await addExternalResourcesToDoc(writer, inputDoc, doc);
   doc = await downloadLinkEmbededMediaElements(writer, doc);
   return doc;
 }
@@ -791,7 +791,7 @@ const archiveCourse = async () => {
   doc = await downloadReplaceDirectLinkedFileLinks(writer, doc);
 
   // one small fix
-  doc = addLinkBackToCourseToNav(doc,true);
+  doc = addLinkBackToCourseToNav(doc, true);
   // add html to zip finally
   const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
   const htmlFileName = safeFileName(getCourseName()) + '.html';

@@ -1,0 +1,15 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true
+    },
+    "rules": {
+        "indent": ["error", 2],
+        "no-alert": 1
+    },
+    "globals": {
+    },
+    "parserOptions": {
+        "ecmVersion": 2018
+    }
+}
