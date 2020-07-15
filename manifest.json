@@ -33,6 +33,7 @@
   "permissions": [
     "storage",
     "https://psywue.sona-systems.com/*",
+    "http://*.uni-wuerzburg.de/*",
     "https://*.uni-wuerzburg.de/*",
     "https://uni-wuerzburg.zoom.us/*"
   ],

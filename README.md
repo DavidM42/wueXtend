@@ -25,4 +25,4 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * Better status update mit spinning button das noch läuft anzeigen
 * info alert popup dass seite aufbleiben muss und es paar minuten dauert alles zu laden bei videos
 * Download all images in text of courses linked with image and relink
-* Add these https://wuecampus2.uni-wuerzburg.de/moodle/mod/lightboxgallery/view.php?id=1218925 -> rip images and html
+* Popup on archive button press -> shows note that only for private use don't share that takes a few minutes and 2 buttons one with video (smaller) and one without videos

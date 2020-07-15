@@ -402,7 +402,8 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
     */
     const foldertreeDiv = linkedDoc.querySelector('div.foldertree');
     const submissionsTableDiv = linkedDoc.querySelector('div.submissionstatustable');
-    if (foldertreeDiv || submissionsTableDiv) {
+    const lightBoxGalleryDiv = linkedDoc.querySelector('div.lightbox-gallery');
+    if (foldertreeDiv || submissionsTableDiv || lightBoxGalleryDiv) {
       // TODO do something like this
       // return backupFolder(writer,linkedDoc, doc);
 
@@ -415,12 +416,11 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       const header = contentTitleH2 || navBarLastItemTitle;
       if (!header) {
         console.warn('Seiten Name nicht gefunden, wird übersprungen: ' + moodleUrl);
-        debugger;
         return;
       }
 
       let path = 'folderPages/';
-      if (!foldertreeDiv && submissionsTableDiv) {
+      if (submissionsTableDiv) {
         path = "submissions/"
       }
       path += safeFileName(header.innerText + '.html');
@@ -456,7 +456,6 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       const header = contentTitleH2 || navBarLastItemTitle;
       if (!header) {
         console.warn('Seiten Name nicht gefunden, wird übersprungen: ' + moodleUrl);
-        debugger;
         return;
       }
       let path = 'subPages/' + safeFileName(header.innerText)+ '.html';
@@ -493,7 +492,8 @@ const replaceMoodleDeepLinks = async (writer, doc) => {
     folderUrlSchema: 'folder/',
     ratingAllocateUrlSchema : 'ratingallocate/',
     choiceUrlSchema: 'choice/',
-    assignUrlSchema: 'assign/'
+    assignUrlSchema: 'assign/',
+    lightboxGallerUrlSchema: 'lightboxgallery/',
   }
 
   // construct selector that selects all links for all supported schemes
@@ -565,7 +565,13 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
     const element = linkElements[i];
 
     // remove to attach not double
-    element.href = element.href.replace('&redirect=1', '') + '&redirect=1';
+    element.href = element.href.replace('&redirect=1', '')
+    if (element.href.includes('?')) {
+      element.href += '&redirect=1';
+    } else {
+      element.href += '?redirect=1'
+    }
+
     try {
       // console.log("Fetched file at ms: " + new Date().getMilliseconds());
       const fileResponse = await fetch(element.href);
@@ -647,6 +653,97 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
 }
 
 /**
+ * Downloads files like images which are embeded directly in the written html
+ * @param {*} writer Writer to write linked resources backups to
+ * @param {*} doc Doc to get resources from and relink resources in
+ * @param {string} localFileLinkPrefix Prefix for local files linked. Used by web pages in sub folders to get back to root
+ * @return {Promise<document>}
+ */
+// TODO conceptunally keep this
+const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix = '') => {
+  // selector to both select url and video link a tags
+
+  // TODO expand selector here when more types of tags with sources emebed surface
+  // find tags which are of interest to backup
+  const imageWithSourceSelector = 'img[src]';
+  const toBackupElements = doc.querySelectorAll(imageWithSourceSelector);
+
+  let alreadyExistingPaths = [];
+  for (let i = 0; i < toBackupElements.length; i++) {
+    const element = toBackupElements[i];
+
+    // Was an idea but probably not needed?
+    // if (getComputedStyle(element, null).display === 'none') {
+    //   // This element would not be seen so don't download and copy
+    //   continue;
+    // }
+
+    try {
+      const fileResponse = await fetch(element.src);
+      const fileStream = fileResponse.body;
+
+      // TODO maybe alert that some were not backuped?
+      if (fileResponse.ok) {
+        // gets name from file url not activity name
+        const fileNameSplit = fileResponse.url.split('/');
+        
+        let fileEnding = fileNameSplit[fileNameSplit.length - 1].split('.')[1];
+        if (fileEnding) {
+          // make sure to not include query like ?forcedownload
+          const splitQueryEnding = fileEnding.split('?');
+          fileEnding = splitQueryEnding[0];
+        } else {
+          const contentType = fileResponse.headers.get('Content-Type');
+          // got from here https://stackoverflow.com/a/48704300 maybe see again when audio or video may be needed
+          switch(contentType) {
+            case 'image/gif':
+              fileEnding = 'gif'
+              break;
+            case 'image/jpeg':
+              fileEnding = 'jpg'
+              break;
+            case 'image/png':
+              fileEnding = 'png'
+              break;
+            case 'image/tiff':
+              fileEnding = 'tiff'
+              break;
+            case 'image/svg+xml':
+              fileEnding = 'svg'
+              break;
+          }
+          if (!fileEnding) {
+            // if still no file ending skip this file and let it be retrieved from web
+            continue;
+          }
+        }
+
+        // check agains array of names already used to not create duplicates
+        let fileName = decodeURIComponent(fileNameSplit[fileNameSplit.length - 1].split('.')[0]);
+        
+        // safe filename is important else it crashes
+        let path = 'webImages/' + safeFileName(fileName) + '.' + fileEnding;
+
+        if (!alreadyExistingPaths.includes(path)) {
+          // only download new one if not same files as previously
+          await writeStreamIntoZip(writer,path,fileStream);
+        }
+
+        toBackupElements[i].src = localFileLinkPrefix + path;
+
+        // save path and url downloaded to compare later
+        alreadyExistingPaths.push(path);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    // await waitHumanLikeTime(150);
+  }
+
+  return doc;
+}
+
+/**
  * Writes file with current time as lastModified and given text and path into zip
  * @param {W} writer Writer to write into
  * @param {string} path Path of new file in zip
@@ -667,6 +764,7 @@ const getRelevantPageContent = async (writer, inputDoc) => {
   let doc = getBasicCleanDocumentClone(inputDoc);
   doc = addRelevantHtmlToDoc(inputDoc, doc);
   doc = await addExternalResourcesToDoc(writer,inputDoc, doc);
+  doc = await downloadLinkEmbededMediaElements(writer, doc);
   return doc;
 }
 
