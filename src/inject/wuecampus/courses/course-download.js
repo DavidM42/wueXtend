@@ -86,7 +86,7 @@ const buttonInProgress = (inProgressBool) => {
 
 const safeFileName = (inString) => {
   // i dont even know what the difference here is but had errors even though looks same -> probs some encoding error
-  inString = inString.replaceAll('ö', 'ö');
+  inString = inString.replace(/ö/g, 'ö');
 
   // umlaut boogaloo
   // inString = inString.replace('ö', 'oe').replace('ä', 'ae').replace('ü', 'ue').replace('ß', 'ss');
@@ -95,7 +95,7 @@ const safeFileName = (inString) => {
   // TODO is temp simple solution thanks to https://stackoverflow.com/a/8485137 maybe safer way usable in client side js
   // including umlaut boogaloo so doesnt get -
   // For - surrounded by e.g. spaces it replaces "dwdwd - dwdw " with "dwdwd---dwdw" and then "dwdwd-dwdw"
-  return inString.replace(/[^a-z0-9äöüß()+]/gi, '-').replaceAll(' ', '_').replaceAll('---', '-');
+  return inString.replace(/[^a-z0-9äöüß()+]/gi, '-').replace(/ /g, '_').replace(/---/g, '-');
 };
 
 const getCourseName = () => {
@@ -145,13 +145,13 @@ const addRelevantHtmlToDoc = (inputDoc, resultDoc) => {
   return resultDoc;
 }
 
-let alreadyDownloadedExternalSources = [];
 /**
  * Adds external resources like scripts and css stylesheets the html depends on to document
  * @param {any} writer Zip writer to write into 
  * @param {document} inputDoc Input document to get stylesheets and scripts from
  * @param {document} doc Document object to edit
  */
+// TODO fix this method and all the strange cases from wuecampus
 const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
   // append inline css elements from site to backup doc
   doc.querySelectorAll('style[type="text/css"').forEach((element) => {
@@ -168,6 +168,8 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
   let allJSLinks = Array.prototype.slice.call(inputDoc.querySelectorAll('script[src]'));
   const allExternalResources = allCssLinks.concat(allJSLinks);
 
+  const alreadyDownloadedExternalSources = [];
+  const alreadyExistingPaths = [];
   for (let i = 0; i < allExternalResources.length; i++) {
     const linkElement = allExternalResources[i].cloneNode(true);
 
@@ -177,18 +179,54 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
     if (pathArray.length < 2) {
       continue;
     }
+
     // TODO not safe filename here okay? probably if url safe also file name safe?
-    const path = 'websources/' + decodeURIComponent(pathArray[1]);
 
-
+    let path = 'websources/' + decodeURIComponent(pathArray[1]);
+  
     if (!alreadyDownloadedExternalSources.includes(source)) {
       // download and links js/css
       const resourceResponse = await fetch(source);
       const resourceStream = resourceResponse.body;
 
       if (resourceResponse.ok) {
-        // TODO warn if not okay instead of ignoring
-        writeStreamIntoZip(writer, path, resourceStream);
+        const fileNameSplit = resourceResponse.url.split('/');
+        const urlFileName = fileNameSplit[fileNameSplit.length - 1];
+        
+        const fileEndingSplit = urlFileName.split('.');
+        let fileEnding;
+        if (fileEndingSplit.length > 1) {
+          // read file ending from url
+          fileEnding = fileEndingSplit[1];
+            
+          // make sure to not include query like ?forcedownload
+          const splitQueryEnding = fileEnding.split('?');
+          fileEnding = splitQueryEnding[0];
+        } else {
+          // guess file Ending from element type
+          if (linkElement.tagName === 'SCRIPT') {
+            fileEnding = 'js';
+          } else if (linkElement.tagName === 'LINK') {
+            fileEnding = 'css';
+          } else {
+            // unknown file ending so can't save and skip this element
+            continue;
+          }
+        }
+
+        // check agains array of names already used to not create duplicates
+        let fileName = decodeURIComponent(urlFileName.split('.')[0]);
+    
+        // safe filename is important else it crashes
+        let path = 'websources/' + fileName + '.' + fileEnding;
+    
+        if (alreadyExistingPaths.includes(path)) {
+          alreadyExistingPaths.push(path);
+          alreadyDownloadedExternalSources.push(source);
+
+          // TODO warn if not okay instead of ignoring
+          writeStreamIntoZip(writer, path, resourceStream);
+        }
 
         // add link to it to html
         if (linkElement.href) {
@@ -199,14 +237,13 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
           continue;
         }
         doc.head.appendChild(linkElement);
-        alreadyDownloadedExternalSources.push(source);
       }
     } else {
       // only relink not re download css and js files
       if (linkElement.href) {
-        linkElement.href = path;
+        linkElement.href = alreadyExistingPaths[alreadyDownloadedExternalSources.indexOf(source)];
       } else if (linkElement.src) {
-        linkElement.src = path;
+        linkElement.src = alreadyExistingPaths[alreadyDownloadedExternalSources.indexOf(source)];
       } else {
         continue;
       }
@@ -725,14 +762,14 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
         let path = 'webImages/' + safeFileName(fileName) + '.' + fileEnding;
 
         if (!alreadyExistingPaths.includes(path)) {
+          // save path and url downloaded to compare later
+          alreadyExistingPaths.push(path);
+  
           // only download new one if not same files as previously
           await writeStreamIntoZip(writer, path, fileStream);
         }
 
         toBackupElements[i].src = localFileLinkPrefix + path;
-
-        // save path and url downloaded to compare later
-        alreadyExistingPaths.push(path);
       }
     } catch (e) {
       console.error(e);
