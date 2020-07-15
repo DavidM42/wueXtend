@@ -15,14 +15,18 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 2. `npm install`
 3. Load in browser
 
-
 ## TODO
 * Define one naming scheme for all files and rename them
 * ESLint on and fix all the problems
-* one small button with videos and one bigger button to rip without videos
 * Rip whole semester / rip all wuecampus belegt button?
-* Better status update mit spinning button das noch läuft anzeigen
-* info alert popup dass seite aufbleiben muss und es paar minuten dauert alles zu laden bei videos
-* Download all images in text of courses linked with image and relink
-* Popup on archive button press -> shows note that only for private use don't share that takes a few minutes and 2 buttons one with video (smaller) and one without videos
+* Popup on archive button press
+  * Shows note that only for private use don't share
+  * That takes a few minutes
+  * Have 2 buttons one with video (smaller) and one without videos
+  * Spinning ststus feedback not statis
+* Wuestudy allow password manager login like for wuecampus
 * Finally write wuel.de as quick link index site for uni websites with wuestudy, wuecampus, gitlab, webmail, mcm site, rocketchat, studieverlaufsplan ask Friends if other needed
+* Option to activate adspace on right side of courses somehow
+* Support creator donate link please consider donatig if made your study better
+* Improve AutoDateScroll with section title dates and dates parsed from fließtext
+* Competive advantage bei Abstimmungen. Vor Auswahl Beginn machen. Wird gespeichert dann bei Startzeit ausgewählt auch sekundär und drei Option wählen wenn das failed dann alert
