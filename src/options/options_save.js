@@ -1,8 +1,12 @@
+/*global browser*/
+/*eslint no-undef: "error"*/
+
 const saveSettings = () => {
     browser.storage.local.set({
         username: document.getElementById('username').value.toLowerCase(),
         password: document.getElementById('password').value,
         autoLogin: document.getElementById('autoLogin').checked,
+        autoDateScroll: document.getElementById('autoDateScroll').checked,
     });
 };
 
@@ -16,16 +20,22 @@ const preloadFieldsValue = (credsObj) => {
         document.getElementById('password').value = credsObj.password;
     }
 
-    // reflect default behaviour as seeing as checke at start at first start
+    // reflect default behaviour as seeing as checked before first open of settings start
     if (credsObj.autoLogin === undefined) {
         document.getElementById('autoLogin').checked = true;
     } else {
         document.getElementById('autoLogin').checked = credsObj.autoLogin;
     }
 
+    // reflect default behaviour as seeing as checked before first open of settings start
+    if (credsObj.autoDateScroll === undefined) {
+        document.getElementById('autoDateScroll').checked = true;
+    } else {
+        document.getElementById('autoDateScroll').checked = credsObj.autoDateScroll;
+    }
 };
 
-const onError = (error) => {
+const onLoginPageError = (error) => {
     console.log(`Error: ${error}`);
 };
 
@@ -35,6 +45,6 @@ window.onload = () => {
     document.getElementById('saveBtn').onclick = saveSettings;
 
     // get creds and prefill
-    const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
+    const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin', 'autoDateScroll']);
     getPromise.then(preloadFieldsValue).catch(onLoginPageError);
 };

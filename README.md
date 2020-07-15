@@ -18,7 +18,6 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 
 ## TODO
 * Define one naming scheme for all files and rename them
-* Review requested permission
 * ESLint on and fix all the problems
 * one small button with videos and one bigger button to rip without videos
 * Rip whole semester / rip all wuecampus belegt button?
@@ -26,3 +25,4 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * info alert popup dass seite aufbleiben muss und es paar minuten dauert alles zu laden bei videos
 * Download all images in text of courses linked with image and relink
 * Popup on archive button press -> shows note that only for private use don't share that takes a few minutes and 2 buttons one with video (smaller) and one without videos
+* Finally write wuel.de as quick link index site for uni websites with wuestudy, wuecampus, gitlab, webmail, mcm site, rocketchat, studieverlaufsplan ask Friends if other needed

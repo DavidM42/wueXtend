@@ -7,7 +7,7 @@
 	<title>WueXtension Settings</title>
 	<script type="application/javascript"
 	src="../../node_modules/webextension-polyfill/dist/browser-polyfill.min.js"></script>
-	<script type="application/javascript" src="./credentials_save.js"></script>
+	<script type="application/javascript" src="./options_save.js"></script>
 	<link rel="stylesheet" type="text/css" href="./style.css">
 </head>
 <body>
@@ -32,6 +32,13 @@
 		<label>
 			Automatic Login: 
 			<input type="checkbox" name="autoLogin" id="autoLogin" title="true">
+		</label>
+	</div>
+
+	<div class="settingItem">
+		<label>
+			Automatic Scrollling to Dates in Wuecampus Courses: 
+			<input type="checkbox" name="autoDateScroll" id="autoDateScroll" title="true">
 		</label>
 	</div>
 
