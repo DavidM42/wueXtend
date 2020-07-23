@@ -5,13 +5,14 @@ const saveSettings = () => {
   browser.storage.local.set({
     username: document.getElementById('username').value.toLowerCase(),
     password: document.getElementById('password').value,
+    courseUrl: document.getElementById("courses").value,
     autoLogin: document.getElementById('autoLogin').checked,
     autoDateScroll: document.getElementById('autoDateScroll').checked,
   });
 };
 
 // prefills field with values from storage
-const preloadFieldsValue = (credsObj) => {
+const preloadFieldsValue = async (credsObj) => {
   // console.log(credsObj);
   if (credsObj.username !== undefined) {
     document.getElementById('username').value = credsObj.username;
@@ -33,6 +34,22 @@ const preloadFieldsValue = (credsObj) => {
   } else {
     document.getElementById('autoDateScroll').checked = credsObj.autoDateScroll;
   }
+
+  // get options for courses from current json
+  const jsonOptions = await fetch('https://wuel.de/courses.json').then((r) => r.json());
+  
+  let select_elem = document.getElementById('courses');
+  jsonOptions.forEach((element) => {
+    let option_elem = document.createElement('option');
+    option_elem.value = element.href;
+    option_elem.textContent = element.name;
+    select_elem.appendChild(option_elem);
+  });
+
+  // try to restore correct option froms storage
+  if (credsObj.courseUrl !== undefined) {
+    document.getElementById("courses").value = credsObj.courseUrl;
+  }
 };
 
 const onLoginPageError = (error) => {
@@ -45,6 +62,7 @@ window.onload = () => {
   document.getElementById('saveBtn').onclick = saveSettings;
 
   // get creds and prefill
-  const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin', 'autoDateScroll']);
-  getPromise.then(preloadFieldsValue).catch(onLoginPageError);
+  const getPromise = browser.storage.local.get(['username', 'password', 'courseUrl', 'autoLogin', 'autoDateScroll']);
+  getPromise.catch(onLoginPageError);
+  getPromise.then(preloadFieldsValue);
 };

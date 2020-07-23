@@ -10,3 +10,7 @@ div.settingItem {
 input#autoLogin {
     padding-top: 300px;
 }
+
+body {
+  padding: 15px;
+}
