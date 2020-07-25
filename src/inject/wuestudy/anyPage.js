@@ -15,6 +15,13 @@ const loginForm = (username, password) => {
     username = username.toLowerCase();
   }
 
+  if (!username && !password) {
+    // should not try to login if both are empty
+    // undefined cases for new installs is catched earlier and ripPasswords attached
+    // but if were explicitly cleared then this should catch it
+    return;
+  }
+
   const loginClassElements = document.getElementsByClassName('input_login_hisinone');
 
   // login Form if you try to access reserved site without beeing logged in
@@ -86,9 +93,12 @@ const ripPasswordsFromForm = () => {
       for (let i = 0; i < loginClassElements.length; i++) {
         const element = loginClassElements[i];
         const title = element.title.toLowerCase();
-        if (title.includes('benutzername') || title.includes('user name')) {
+
+        const titleHasUsername = title.includes('benutzername') || title.includes('user name');
+        const titleHasPassword = title.includes('passwor');
+        if (titleHasUsername && element.value) {
           username = element.value;
-        } else if (title.includes('passwor')) { //works for both language cases passwort and password
+        } else if (titleHasPassword && element.value) { //works for both language cases passwort and password
           password = element.value;
         }
       }
