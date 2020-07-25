@@ -92,7 +92,7 @@
         "npm_scripts/browser-polyfill.min.js",
         "src/inject/wuecampus/courses/autoDateScroll.js",
         "src/inject/wuecampus/courses/enrollment-button.js",
-        "npm_scripts/web-streams-polyfill.es6.min.js",
+        "npm_scripts/web-streams-polyfill-3.0.0.es6.min.js",
         "npm_scripts/pako.min.js",
         "npm_scripts/StreamSaver.js",
         "npm_scripts/transcend-io-conflux.js",
