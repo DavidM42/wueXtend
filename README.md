@@ -15,6 +15,13 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 2. `npm install`
 3. Load in browser
 
+## Third party library sources
+* Browser Polyfill [CDN](https://unpkg.com/browse/webextension-polyfill@0.6.0/dist/browser-polyfill.min.js) and [github](https://github.com/mozilla/webextension-polyfill)
+* Pako [github relase](https://github.com/nodeca/pako/blob/1.0.11/dist/pako.min.js)
+* Web Streams Polyfill [CDN Folder](https://www.jsdelivr.com/package/npm/web-streams-polyfill?path=dist); [CDN File](https://cdn.jsdelivr.net/npm/web-streams-polyfill@3.0.0/dist/polyfill.es6.min.js) and [github](https://github.com/MattiasBuelens/web-streams-polyfill)
+* Streamsaver [github](https://github.com/jimmywarting/StreamSaver.js)
+* Transcend.IO Conflux [github](https://github.com/transcend-io/conflux)
+
 ## TODO
 * Define one naming scheme for all files and rename them
 * ESLint on and fix all the problems
