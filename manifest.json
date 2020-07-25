@@ -119,6 +119,15 @@
         "npm_scripts/browser-polyfill.min.js",
         "src/inject/webmail/login/login.js"
       ]
+    },
+    {
+      "matches": [
+        "https://wuel.de/"
+      ],
+      "js": [
+        "npm_scripts/browser-polyfill.min.js",
+        "src/inject/wuel/coursePreferenceSave.js"
+      ]
     }
   ]
 }
