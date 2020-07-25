@@ -1,10 +1,20 @@
 // TODO smarter with CSS file and html template
 // TODO write own classes for style cause nav classes not correct here
 // almost same code as enrollment button
+// this is the button up top in nav bar
 const archiveNavButtonTemplate = `
 <div class="studentdash nav-item nav-link" style="padding: 0 3px 0 2px;" id="archiveDownloadBtn">
     <a role="button" title="Download Course Archive" class="btn btn-secondary fhs-tooltip" href="javascript:;">
         <i id="archiveDownloadIcon" class="fa fa-download"></i>
+    </a>
+</div>
+`;
+
+// this is the button in the course title bar
+const downloadBtnTemplate = `
+<div class="studentdash nav-item nav-link" style="padding: 0 3px 0 2px;">
+    <a role="button" title="" class="btn btn-secondary fhs-tooltip" id="archiveDownloadBtn">
+        <i class="fa fa-download" style="color: #FFF;" id="archiveDownloadIcon"> Archive</i>
     </a>
 </div>
 `;
@@ -47,6 +57,7 @@ const addArchiveDownloadBtn = () => {
     existingArchiveBtn.remove();
   }
 
+  // add button to archive to nav bar
   const courseControls = document.getElementsByClassName('coursecontrols');
   if (courseControls.length === 1) {
     courseControls[0].innerHTML += archiveNavButtonTemplate;
@@ -56,14 +67,15 @@ const addArchiveDownloadBtn = () => {
     newArchiveBtn.onclick = archiveCourse;
   }
 
-  const dFlexes = document.getElementById('page-header').getElementsByClassName('d-flex');
-  if (dFlexes.length === 3) {
-    // add btn template 
-    dFlexes[0].innerHTML += downloadBtnTemplate;
+  // adds btn to archive to course title
+  // const dFlexes = document.getElementById('page-header').getElementsByClassName('d-flex');
+  // if (dFlexes.length === 3) {
+  //   // add btn template 
+  //   dFlexes[0].innerHTML += downloadBtnTemplate;
 
-    // and onclick event to download
-    const archiveBtn = document.getElementById('archiveDownloadBtn');
-  }
+  //   // and onclick event to download
+  //   const archiveBtn = document.getElementById('archiveDownloadBtn');
+  // }
 };
 
 const buttonInProgress = (inProgressBool) => {
@@ -844,7 +856,7 @@ const archiveCourse = async () => {
   buttonInProgress(false);
 };
 
-browser.runtime.sendMessage({}, () => {
+browser.runtime.sendMessage({}).then(() => {
   var readyStateCheckInterval = setInterval(() => {
     if (document.readyState === 'complete') {
       clearInterval(readyStateCheckInterval);

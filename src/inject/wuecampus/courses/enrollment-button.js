@@ -32,7 +32,7 @@ const addEnrollmentButton = () => {
 };
 
 // eslint-disable-next-line no-undef
-browser.runtime.sendMessage({}, () => {
+browser.runtime.sendMessage({}).then(() => {
   var readyStateCheckInterval = setInterval(() => {
     if (document.readyState === 'complete') {
       clearInterval(readyStateCheckInterval);

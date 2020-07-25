@@ -137,7 +137,7 @@ const onAnyPageError = (error) => {
   console.log(`Error: ${error}`);
 };
 
-browser.runtime.sendMessage({}, () => {
+browser.runtime.sendMessage({}).then(() => {
   var readyStateCheckInterval = setInterval(() => {
     if (document.readyState === 'complete') {
       clearInterval(readyStateCheckInterval);

@@ -64,7 +64,7 @@ const onAutoDateScrollError = (error) => {
 };
 
 // TODO make it work for date in title like this https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php?id=35504
-browser.runtime.sendMessage({}, () => {
+browser.runtime.sendMessage({}).then(() => {
   var readyStateCheckInterval = setInterval(() => {
     if (document.readyState === 'complete') {
       clearInterval(readyStateCheckInterval);
