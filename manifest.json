@@ -110,6 +110,15 @@
         "npm_scripts/browser-polyfill.min.js",
         "src/inject/wuestudy/anyPage.js"
       ]
+    },
+    {
+      "matches": [
+        "https://webmail.uni-wuerzburg.de/login.php"
+      ],
+      "js": [
+        "npm_scripts/browser-polyfill.min.js",
+        "src/inject/webmail/login/login.js"
+      ]
     }
   ]
 }
