@@ -521,7 +521,8 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
   }
 
   if (textOrUrlOrStream.includes(moodleDeepUrlSchema)) {
-    return await resolveDeepMoodleLinks(writer, redirectLinkAtag.href);
+    // don't do this anymore as it creates an infinite loop with non cors enabled extenal links as redirect goal
+    // return await resolveDeepMoodleLinks(writer, textOrUrlOrStream);
   }
   return textOrUrlOrStream;
 };
@@ -675,10 +676,14 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
             }
           }
 
+          // is not exactly same file only same name so donwload to renamed file
           if (!foundSameBlobs) {
             // rename if not same file as previous
             fileName += '-I';
-            path = 'Dateien/' + safeFileName(fileName) + '.' + fileEnding;
+            while (alreadyExistingPath.includes(path)) {
+              fileName += 'I';
+              path = 'Dateien/' + safeFileName(fileName) + '.' + fileEnding;
+            }
           }
         }
 
@@ -686,12 +691,6 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
           // only download new one if not same files as previously
           await writeStreamIntoZip(writer, path, fileStream);
         }
-
-        // THIS ONE
-        // session_06 2007_research-based_web_design_and_usability_guidelines-I
-        // if (element.href.includes('https://wuecampus2.uni-wuerzburg.de/moodle/mod/resource/view.php?id=1286913')) {  const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
-        //   debugger;
-        // }
 
         linkElements[i].href = localFileLinkPrefix + path;
         linkElements[i].setAttribute('onClick', '');

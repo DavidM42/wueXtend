@@ -34,9 +34,16 @@ browser.runtime.onMessage.addListener( async (request, sender, sendResponse) => 
             }
         } catch (e) {
             console.warn(e);
-            // console.warn(response.header)
-            // return response.header.get('location');
-            return response.url;
+            // maybe find some fix for it sometimes
+            // e is "NetworkError when attempting to fetch resource" when this get's called with moodle url which 303 redirects to external url which disallows cors
+            try {
+              // response is not defined at these cors request failures so catch that and just return moodle url for now
+              return response.url;              
+            } catch (e) {
+              if(e.name == "ReferenceError") {
+                return requestUrl;
+              }
+            }
         }
     }
     return null;
