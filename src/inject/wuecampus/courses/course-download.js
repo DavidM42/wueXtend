@@ -656,9 +656,16 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
           for (let i = 0; i < alreadyExistingPath.length; i++) {
             if (alreadyExistingPath[i] === path) {
               let previousDownloadBlob = await fetch(alreadyExitingPathUrlSame[i]).then((r) => r.blob());
-              // habe to clone fileResponse because `fileStream = fileResponse.body` locks response
+              
+              // have to clone fileResponse because `fileStream = fileResponse.body` locks response
               // see https://stackoverflow.com/a/54115314
-              let currentDownloadBlob = await fileResponse.clone().blob();
+              // this solution worked for firefox but sadly not for chrome
+              // let currentDownloadBlob = await fileResponse.clone().blob();
+
+              // to also make it work in chrome
+              // we'll make another request to be sure not to lock existing fileResponse -> fileStream
+              // increases used badnwiths and connections but whatever for now
+              let currentDownloadBlob = await fetch(element.href).then((response) => response.blob());
 
               // check if blobs are same size
               if (previousDownloadBlob.size === currentDownloadBlob.size) {
