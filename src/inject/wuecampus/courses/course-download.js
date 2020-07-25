@@ -3,8 +3,8 @@
 // almost same code as enrollment button
 const archiveNavButtonTemplate = `
 <div class="studentdash nav-item nav-link" style="padding: 0 3px 0 2px;" id="archiveDownloadBtn">
-    <a role="button" title="Download Course Archive" class="btn btn-secondary fhs-tooltip">
-        <i id="archiveDownloadIcon" class="fa fa-download" style="color: #FFF;"></i>
+    <a role="button" title="Download Course Archive" class="btn btn-secondary fhs-tooltip" href="javascript:;">
+        <i id="archiveDownloadIcon" class="fa fa-download"></i>
     </a>
 </div>
 `;
@@ -74,11 +74,13 @@ const buttonInProgress = (inProgressBool) => {
   if (inProgressBool === true) {
     // spinner icon and not interactable
     archiveIcon.classList.remove('fa-download');
-    archiveIcon.classList.add('fa-spinner');
+    archiveIcon.classList.add('fa-spinner')
+    archiveIcon.classList.add('fa-spin');
     archiveBtn.classList.add('notInteractable');
   } else {
     // back to normal with download icon and interaction
-    archiveIcon.classList.remove('fa-spinner');
+    archiveIcon.classList.remove('fa-spinner')
+    archiveIcon.classList.remove('fa-spin');
     archiveIcon.classList.add('fa-download');
     archiveBtn.classList.remove('notInteractable');
   }
