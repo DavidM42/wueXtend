@@ -58,6 +58,11 @@ const writeStreamIntoZip = (writer, path, stream) => {
 
 // TODO two buttons one button with videos one without
 const addArchiveDownloadBtn = () => {
+  const isSectionSubPage = window.location.href.includes('section');
+  if (isSectionSubPage) {
+    return;
+  }
+
   const existingArchiveBtn = document.getElementById('archiveDownloadBtn');
   if (existingArchiveBtn) {
     existingArchiveBtn.remove();
@@ -172,6 +177,8 @@ const addRelevantHtmlToDoc = (inputDoc, resultDoc) => {
  * @param {document} doc Document object to edit
  */
 // TODO fix this method and all the strange cases from wuecampus
+const alreadyDownloadedExternalSources = [];
+const alreadyExistingExternalResourcesPaths = [];
 const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
   // append inline css elements from site to backup doc
   doc.querySelectorAll('style[type="text/css"').forEach((element) => {
@@ -188,8 +195,6 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
   let allJSLinks = Array.prototype.slice.call(inputDoc.querySelectorAll('script[src]'));
   const allExternalResources = allCssLinks.concat(allJSLinks);
 
-  const alreadyDownloadedExternalSources = [];
-  const alreadyExistingPaths = [];
   for (let i = 0; i < allExternalResources.length; i++) {
     const linkElement = allExternalResources[i].cloneNode(true);
 
@@ -203,7 +208,7 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
     // TODO not safe filename here okay? probably if url safe also file name safe?
 
     let path = 'websources/' + decodeURIComponent(pathArray[1]);
-  
+
     if (!alreadyDownloadedExternalSources.includes(source)) {
       // download and links js/css
       const resourceResponse = await fetch(source);
@@ -212,13 +217,13 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
       if (resourceResponse.ok) {
         const fileNameSplit = resourceResponse.url.split('/');
         const urlFileName = fileNameSplit[fileNameSplit.length - 1];
-        
+
         const fileEndingSplit = urlFileName.split('.');
         let fileEnding;
         if (fileEndingSplit.length > 1) {
           // read file ending from url
           fileEnding = fileEndingSplit[1];
-            
+
           // make sure to not include query like ?forcedownload
           const splitQueryEnding = fileEnding.split('?');
           fileEnding = splitQueryEnding[0];
@@ -236,12 +241,12 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
 
         // check agains array of names already used to not create duplicates
         let fileName = decodeURIComponent(urlFileName.split('.')[0]);
-    
+
         // safe filename is important else it crashes
         let path = 'websources/' + fileName + '.' + fileEnding;
-    
-        if (alreadyExistingPaths.includes(path)) {
-          alreadyExistingPaths.push(path);
+
+        if (alreadyExistingExternalResourcesPaths.includes(path)) {
+          alreadyExistingExternalResourcesPaths.push(path);
           alreadyDownloadedExternalSources.push(source);
 
           // TODO warn if not okay instead of ignoring
@@ -261,9 +266,9 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
     } else {
       // only relink not re download css and js files
       if (linkElement.href) {
-        linkElement.href = alreadyExistingPaths[alreadyDownloadedExternalSources.indexOf(source)];
+        linkElement.href = alreadyExistingExternalResourcesPaths[alreadyDownloadedExternalSources.indexOf(source)];
       } else if (linkElement.src) {
-        linkElement.src = alreadyExistingPaths[alreadyDownloadedExternalSources.indexOf(source)];
+        linkElement.src = alreadyExistingExternalResourcesPaths[alreadyDownloadedExternalSources.indexOf(source)];
       } else {
         continue;
       }
@@ -301,6 +306,7 @@ const addLinkBackToCourseToNav = (doc, alreadyOn = false) => {
  * @param {string} moodleUrl 
  */
 // let TEST_ONLY_ONE_VIDEO = false;
+const downloadedMoodleDeepLinks = [];
 const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
   const moodleDeepUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/';
   const moodlePathSplit = moodleUrl.split('https://wuecampus2.uni-wuerzburg.de/moodle');
@@ -375,6 +381,11 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
                 // safe filename is important else it crashes
                 let path = 'videos/' + safeFileName(decodeURIComponent(urlParts[urlParts.length - 1]));
 
+                if (downloadedMoodleDeepLinks.includes(path)) {
+                  return path;
+                }
+                downloadedMoodleDeepLinks.push(path);
+
                 // TODO not blacklist host but find out why this host does not load currently and how to detect and prevent these cases of dead hosts in future with fetch like timeout e.g.
                 // TODO https://medium.com/swlh/making-cancel-able-http-requests-with-javascript-fetch-api-f934bba18228 timeout after to long
                 // if (!realVideoUrl.includes('forschung.mcm.uni-wuerzburg.de')) {
@@ -416,6 +427,11 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
             const urlParts = realVideoUrl.split('/');
             // safe filename is important else it crashes
             let path = 'videos/' + decodeURIComponent(urlParts[urlParts.length - 1]);
+
+            if (downloadedMoodleDeepLinks.includes(path)) {
+              return path;
+            }
+            downloadedMoodleDeepLinks.push(path);
 
             const videoResponse = await fetch(realVideoUrl);
             if (videoResponse.ok) {
@@ -480,10 +496,15 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       if (submissionsTableDiv) {
         path = "submissions/"
       }
-      path += safeFileName(header.innerText + '.html');
+      path += safeFileName(header.innerText) + '.html';
+
+      if (downloadedMoodleDeepLinks.includes(path)) {
+        return path;
+      }
+      downloadedMoodleDeepLinks.push(path);
 
       // start doc
-      let doc = await getRelevantPageContent(writer, linkedDoc);
+      let doc = await getRelevantPageContent(writer, linkedDoc, '../');
 
       // get linked files in folder/assignment
       doc = await downloadReplaceDirectLinkedFileLinks(writer, doc, '../');
@@ -495,6 +516,49 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       return path;
     }
 
+
+    /* 
+      Sections of course linked via buttons Download Part 
+      Requires html to be ripped,
+      files linked there to be downloaded and linked in section page
+      and local link to section page given back to relink function
+    */
+    const sectionContentBox = linkedDoc.querySelector('div.single-section');
+    if (sectionContentBox) {
+      const navBarLastItemTitle = linkedDoc.querySelector('div#page-navbar > nav > ul > li:last-of-type > a');
+      if (navBarLastItemTitle) {
+        navBarLastItemTitle.href = '#';
+      }
+
+      const sectioNameSpanBigTitle = linkedDoc.querySelector('div.navigationtitle > h3.sectionname > span');
+      const sectionHeader = sectioNameSpanBigTitle || navBarLastItemTitle;
+      if (!sectionHeader) {
+        console.warn('Section Name nicht gefunden, wird übersprungen: ' + moodleUrl);
+        return;
+      }
+      let path = 'sections/' + safeFileName(sectionHeader.innerText) + '.html';
+
+      if (downloadedMoodleDeepLinks.includes(path)) {
+        return path;
+      }
+      downloadedMoodleDeepLinks.push(path);
+
+      let doc = await getRelevantPageContent(writer, linkedDoc, '../');
+
+      // get linked files in section
+      doc = await downloadReplaceDirectLinkedFileLinks(writer, doc, '../');
+
+      // treat like whole course by replacing all deep links with local files
+      doc = await replaceMoodleDeepLinks(writer, doc, false, '../');
+
+      // TODO fix links on top and bottom left and right side to previous and next section to be local ones
+
+      // finally link in nav bar back to course
+      doc = addLinkBackToCourseToNav(doc);
+      const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+      addTextFileToArchive(writer, path, htmlWithDoctype)
+      return path;
+    }
 
     /* 
       Page and Rating allocate Download Part 
@@ -517,7 +581,12 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       }
       let path = 'subPages/' + safeFileName(header.innerText) + '.html';
 
-      let doc = await getRelevantPageContent(writer, linkedDoc);
+      if (downloadedMoodleDeepLinks.includes(path)) {
+        return path;
+      }
+      downloadedMoodleDeepLinks.push(path);
+
+      let doc = await getRelevantPageContent(writer, linkedDoc, '../');
       doc = addLinkBackToCourseToNav(doc);
       const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
       addTextFileToArchive(writer, path, htmlWithDoctype)
@@ -538,35 +607,45 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
  * @param {*} writer The writer to write potential video into
  * @param {document} doc The document of the course containing links which shoudl be local ones
  */
-const replaceMoodleDeepLinks = async (writer, doc) => {
+const replaceMoodleDeepLinks = async (writer, doc, includeSections = true, pathPrefix = '') => {
   const moodleUrlStart = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/'
 
   // Add new supported url types to query here
   const supportedMoodleUrlSchemes = {
-    // TODO stop data save mode and reactivate
     urlSchema: 'url/',
     videoUrlSchema: 'lti/',
     pageLinkUrlSchema: 'page/',
     folderUrlSchema: 'folder/',
     ratingAllocateUrlSchema: 'ratingallocate/',
     choiceUrlSchema: 'choice/',
+    // TODO missing choice group links like https://wuecampus2.uni-wuerzburg.de/moodle/mod/choicegroup/view.php?id=962443
     assignUrlSchema: 'assign/',
     lightboxGallerUrlSchema: 'lightboxgallery/',
   }
 
   // construct selector that selects all links for all supported schemes
   // selectors like these `a[href^="https://wuecampus2.uni-wuerzburg.de/moodle/mod/folder/"], ` combined with commas
-  let urlAndVideoUrlTypeSelector = '';
+  let urlTypeSelectors = '';
   let allUrls = Object.values(supportedMoodleUrlSchemes);
   for (let i = 0; i < allUrls.length; i++) {
     if (i > 0) {
-      urlAndVideoUrlTypeSelector += ', ';
+      urlTypeSelectors += ', ';
     }
     const combinedUrl = moodleUrlStart + allUrls[i];
-    urlAndVideoUrlTypeSelector += `a[href^="${combinedUrl}"]`
+    urlTypeSelectors += `a[href^="${combinedUrl}"]`
   }
 
-  const linkElements = doc.querySelectorAll(urlAndVideoUrlTypeSelector);
+  if (includeSections) {
+    // has extra flag to prevent recursion
+
+    // sections like this need special query selector additon
+    // https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php?id=1337&section=2
+    const sectionUrlStart = 'https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php';
+    const sectionSelectorCourseContainsSections = `, a[href^="${sectionUrlStart}"][href*="section"].btn`;
+    urlTypeSelectors += sectionSelectorCourseContainsSections
+  }
+
+  const linkElements = doc.querySelectorAll(urlTypeSelectors);
   for (let i = 0; i < linkElements.length; i++) {
     const element = linkElements[i];
 
@@ -585,7 +664,7 @@ const replaceMoodleDeepLinks = async (writer, doc) => {
     // }
 
     const returnedPath = await resolveDeepMoodleLinks(writer, element.href);
-    linkElements[i].href = returnedPath;
+    linkElements[i].href = pathPrefix + returnedPath;
 
     // await waitHumanLikeTime(150);
   }
@@ -600,6 +679,8 @@ const replaceMoodleDeepLinks = async (writer, doc) => {
  * @param {string} localFileLinkPrefix Prefix for local files linked. Used by web pages in sub folders to get back to root
  * @return {Promise<document>}
  */
+let alreadyExistingDirectLinkPath = [];
+let alreadyExitingDirectLinkPathUrlSame = [];
 const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPrefix = '') => {
   const moodleResourceViewUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/resource/view.php?';
   const moodleResourcePhpUrlSchema = 'https://wuecampus2.uni-wuerzburg.de/moodle/pluginfile.php/';
@@ -607,8 +688,6 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
   const resourceUrlTypeSelector = 'a[href^="' + moodleResourceViewUrlSchema + '"], a[href^="' + moodleResourcePhpUrlSchema + '"]';
   const linkElements = doc.querySelectorAll(resourceUrlTypeSelector);
 
-  let alreadyExistingPath = [];
-  let alreadyExitingPathUrlSame = [];
   for (let i = 0; i < linkElements.length; i++) {
 
     // Fallback name TODO better one maybe? but should not show
@@ -642,6 +721,15 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
 
         let fileEnding = fileNameSplit[fileNameSplit.length - 1].split('.')[1];
         // make sure to not include query like ?forcedownload
+        if (!fileEnding) {
+          // try to guess it from response type
+          fileEnding = getFileEndingFromMimeType(fileResponse.headers.get('Content-Type'));
+
+          if (!fileEnding) {
+            console.warn('File Ending for file from url: ' + element.href + ' is unknown so will be set to .unknown as temp fix but this is suboptimal');
+            fileEnding = '.unknown'
+          }
+        }
         const splitQueryEnding = fileEnding.split('?');
         fileEnding = splitQueryEnding[0];
 
@@ -659,11 +747,11 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
         // }
 
         let foundSameBlobs = false;
-        if (alreadyExistingPath.includes(path)) {
-          for (let i = 0; i < alreadyExistingPath.length; i++) {
-            if (alreadyExistingPath[i] === path) {
-              let previousDownloadBlob = await fetch(alreadyExitingPathUrlSame[i]).then((r) => r.blob());
-              
+        if (alreadyExistingDirectLinkPath.includes(path)) {
+          for (let i = 0; i < alreadyExistingDirectLinkPath.length; i++) {
+            if (alreadyExistingDirectLinkPath[i] === path) {
+              let previousDownloadBlob = await fetch(alreadyExitingDirectLinkPathUrlSame[i]).then((r) => r.blob());
+
               // have to clone fileResponse because `fileStream = fileResponse.body` locks response
               // see https://stackoverflow.com/a/54115314
               // this solution worked for firefox but sadly not for chrome
@@ -686,7 +774,7 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
           if (!foundSameBlobs) {
             // rename if not same file as previous
             fileName += '-I';
-            while (alreadyExistingPath.includes(path)) {
+            while (alreadyExistingDirectLinkPath.includes(path)) {
               fileName += 'I';
               path = 'Dateien/' + safeFileName(fileName) + '.' + fileEnding;
             }
@@ -703,8 +791,8 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
 
 
         // save path and url downloaded to compare later
-        alreadyExistingPath.push(path);
-        alreadyExitingPathUrlSame.push(fileResponse.url);
+        alreadyExistingDirectLinkPath.push(path);
+        alreadyExitingDirectLinkPathUrlSame.push(fileResponse.url);
       }
     } catch (e) {
       console.error(e);
@@ -756,28 +844,16 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
           const splitQueryEnding = fileEnding.split('?');
           fileEnding = splitQueryEnding[0];
         } else {
-          const contentType = fileResponse.headers.get('Content-Type');
-          // got from here https://stackoverflow.com/a/48704300 maybe see again when audio or video may be needed
-          switch (contentType) {
-            case 'image/gif':
-              fileEnding = 'gif'
-              break;
-            case 'image/jpeg':
-              fileEnding = 'jpg'
-              break;
-            case 'image/png':
-              fileEnding = 'png'
-              break;
-            case 'image/tiff':
-              fileEnding = 'tiff'
-              break;
-            case 'image/svg+xml':
-              fileEnding = 'svg'
-              break;
-          }
+          // try to guess it from response type
+          fileEnding = getFileEndingFromMimeType(fileResponse.headers.get('Content-Type'));
+
           if (!fileEnding) {
-            // if still no file ending skip this file and let it be retrieved from web
-            continue;
+            // if still no file ending warn and give it unknown file ending
+            console.warn('File Ending for file from url: ' + element.src + ' is unknown so will be set to .unknown as temp fix but this is suboptimal');
+            fileEnding = '.unknown'
+            // TODO is this working?
+            // could also just skip file and leave it to web url but try to avoid that maybe
+            // continue;
           }
         }
 
@@ -790,7 +866,7 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
         if (!alreadyExistingWebImagesPaths.includes(path)) {
           // save path and url downloaded to compare later
           alreadyExistingWebImagesPaths.push(path);
-  
+
           // only download new one if not same files as previously
           await writeStreamIntoZip(writer, path, fileStream);
         }
@@ -822,12 +898,13 @@ const addTextFileToArchive = (writer, path, text) => {
  * Clones current page, removes useless things and saves external resources locally and relinks
  * @param {*} writer 
  * @param {document} inputDoc The input doc from which to copy
+ * @param {string} localFileLinkPrefix Prefix for local file links like web images which are saved
  */
-const getRelevantPageContent = async (writer, inputDoc) => {
+const getRelevantPageContent = async (writer, inputDoc, localFileLinkPrefix = '') => {
   let doc = getBasicCleanDocumentClone(inputDoc);
   doc = addRelevantHtmlToDoc(inputDoc, doc);
   doc = await addExternalResourcesToDoc(writer, inputDoc, doc);
-  doc = await downloadLinkEmbededMediaElements(writer, doc);
+  doc = await downloadLinkEmbededMediaElements(writer, doc, localFileLinkPrefix);
   return doc;
 }
 
