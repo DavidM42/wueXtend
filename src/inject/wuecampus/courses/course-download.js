@@ -40,7 +40,13 @@ const waitHumanLikeTime = async (timeMs) => {
  * @param {string} path The path in the zip file to save the file to
  * @param {ReadableStream<Uint8Array>} stream The stream to write into the file
  */
+const alreadyWrotePathToZip = [];
 const writeStreamIntoZip = (writer, path, stream) => {
+  if (alreadyWrotePathToZip.includes(path)) {
+    console.error('File with path ' + path + ' was previously written. To prevent error from crashing export file was skipped but this is probably an error in the logic');
+    return;
+  }
+  alreadyWrotePathToZip.push(path);
   console.log('%c Will now stream into: ' + path, 'font-size: 8px; color: #33;');
   return writer.write({
     name: path,
@@ -717,6 +723,7 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
  * @return {Promise<document>}
  */
 // TODO conceptunally keep this
+let alreadyExistingWebImagesPaths = [];
 const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix = '') => {
   // selector to both select url and video link a tags
 
@@ -725,7 +732,6 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
   const imageWithSourceSelector = 'img[src]';
   const toBackupElements = doc.querySelectorAll(imageWithSourceSelector);
 
-  let alreadyExistingPaths = [];
   for (let i = 0; i < toBackupElements.length; i++) {
     const element = toBackupElements[i];
 
@@ -781,9 +787,9 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
         // safe filename is important else it crashes
         let path = 'webImages/' + safeFileName(fileName) + '.' + fileEnding;
 
-        if (!alreadyExistingPaths.includes(path)) {
+        if (!alreadyExistingWebImagesPaths.includes(path)) {
           // save path and url downloaded to compare later
-          alreadyExistingPaths.push(path);
+          alreadyExistingWebImagesPaths.push(path);
   
           // only download new one if not same files as previously
           await writeStreamIntoZip(writer, path, fileStream);
