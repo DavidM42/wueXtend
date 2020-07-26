@@ -96,6 +96,7 @@
         "npm_scripts/pako.min.js",
         "npm_scripts/StreamSaver.js",
         "npm_scripts/transcend-io-conflux.js",
+        "npm_scripts/mime-type-db.js",
         "src/inject/wuecampus/courses/course-download.js"
       ],
       "css": [

@@ -21,6 +21,7 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * Web Streams Polyfill [CDN Folder](https://www.jsdelivr.com/package/npm/web-streams-polyfill?path=dist); [CDN File](https://cdn.jsdelivr.net/npm/web-streams-polyfill@3.0.0/dist/polyfill.es6.min.js) and [github](https://github.com/MattiasBuelens/web-streams-polyfill)
 * Streamsaver [github](https://github.com/jimmywarting/StreamSaver.js)
 * Transcend.IO Conflux [github](https://github.com/transcend-io/conflux)
+* Mime-Types [CDN](https://cdn.jsdelivr.net/npm/mime-types@2.1.27/index.js) [github](https://github.com/jshttp/mime-types)
 
 ## TODO
 * Define one naming scheme for all files and rename them
@@ -36,3 +37,5 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * Support creator donate link please consider donatig if made your study better
 * Improve AutoDateScroll with section title dates and dates parsed from fließtext
 * Competive advantage bei Abstimmungen. Vor Auswahl Beginn machen. Wird gespeichert dann bei Startzeit ausgewählt auch sekundär und drei Option wählen wenn das failed dann alert
+* Choice groups links like https://wuecampus2.uni-wuerzburg.de/moodle/mod/choicegroup/view.php?id=962443
+* Html slide decks like https://wuecampus2.uni-wuerzburg.de/moodle/mod/resource/view.php?id=1020296
