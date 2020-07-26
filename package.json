@@ -1,6 +1,6 @@
 {
   "name": "wuextension",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Assisting functionality for the websites of the university of wuerzburg as cross platform browser extension.",
   "main": "index.js",
   "scripts": {
