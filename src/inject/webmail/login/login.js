@@ -1,6 +1,7 @@
 const usernameFieldId = 'horde_user';
 const passwordFieldId = 'horde_pass';
 const loginBtnFieldId = 'login-button';
+const mobileLoginBtnSelector = 'input[name="login_button"]';
 
 
 // lines below basically copy of wuecampus2 login code only other ids
@@ -13,6 +14,15 @@ const saveSettings = (usernameIn, passwordIn) => {
   });
 };
 
+const getLoginBtn = () => {
+  let loginButton = document.getElementById(loginBtnFieldId);
+
+  if (!loginButton) {
+    loginButton = document.querySelector(mobileLoginBtnSelector);
+  }
+  return loginButton;
+}
+
 const fillOutLoginForm = (username, password) => {
   const usernameField = document.getElementById(usernameFieldId);
   const passwordField = document.getElementById(passwordFieldId);
@@ -20,7 +30,7 @@ const fillOutLoginForm = (username, password) => {
   usernameField.value = username;
   passwordField.value = password;
 
-  const loginButton = document.getElementById(loginBtnFieldId);
+  const loginButton = getLoginBtn();
   loginButton.click();
 };
 
@@ -48,7 +58,7 @@ const onExtensionManagedCredsLogin = (credsObj) => {
 
   if (!username || !password) {
     // if no username password were set get the ones entered on first login onclick of loginBtn
-    const loginButton = document.getElementById(loginBtnFieldId);
+    const loginButton = getLoginBtn();
 
     // Only rip credentials to localstorage if consented by activating auto Login
     if (autoLogin !== false) {
@@ -83,7 +93,7 @@ const onPasswordManagedCredsLogin = (credsObj) => {
   // defaults to autoLogin but can be explicetly stopped in settings by unchecking checkbox
   if (autoLogin !== false) {
     console.log('Autofilled credentials found will auto login as wanted');
-    const loginButton = document.getElementById(loginBtnFieldId);
+    const loginButton = getLoginBtn();
     if (loginButton) {
       loginButton.click()
     }
