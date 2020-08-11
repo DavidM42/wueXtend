@@ -154,7 +154,7 @@ const getBasicCleanDocumentClone = (inputDoc) => {
  * @param {document} inputDoc The doc which copy from
  * @param {document} resultDoc The doc which should contain important info from currentDoc
  */
-const addRelevantHtmlToDoc = (inputDoc, resultDoc) => {
+const addRelevantMoodleHtmlToDoc = (inputDoc, resultDoc) => {
   // add deep cloned paged header and content divs to html
   let pageHeader = inputDoc.querySelector('header#page-header').cloneNode(true);
   const archiveBtn = pageHeader.querySelector('#archiveDownloadBtn');
@@ -170,16 +170,18 @@ const addRelevantHtmlToDoc = (inputDoc, resultDoc) => {
   return resultDoc;
 }
 
+
+// TODO fix this method and all the strange cases from wuecampus
+const alreadyDownloadedExternalSources = [];
+const alreadyExistingExternalResourcesPaths = [];
 /**
  * Adds external resources like scripts and css stylesheets the html depends on to document
  * @param {any} writer Zip writer to write into 
  * @param {document} inputDoc Input document to get stylesheets and scripts from
  * @param {document} doc Document object to edit
+ * @param {string} localFileLinkPrefix Prefix for link paths. Used by html documents in sub folders to correctly link  to websources folder
  */
-// TODO fix this method and all the strange cases from wuecampus
-const alreadyDownloadedExternalSources = [];
-const alreadyExistingExternalResourcesPaths = [];
-const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
+const addExternalResourcesToDoc = async (writer, inputDoc, doc, localFileLinkPrefix = '') => {
   // append inline css elements from site to backup doc
   doc.querySelectorAll('style[type="text/css"').forEach((element) => {
     doc.head.appendChild(element);
@@ -202,7 +204,7 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
     let source = linkElement.href || linkElement.src;
     let pathArray = source.split('https://wuecampus2.uni-wuerzburg.de/moodle/');
     if (pathArray.length < 2) {
-      continue;
+        continue;
     }
 
     // TODO not safe filename here okay? probably if url safe also file name safe?
@@ -245,7 +247,7 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
         // safe filename is important else it crashes
         let path = 'websources/' + fileName + '.' + fileEnding;
 
-        if (alreadyExistingExternalResourcesPaths.includes(path)) {
+        if (!alreadyExistingExternalResourcesPaths.includes(path)) {
           alreadyExistingExternalResourcesPaths.push(path);
           alreadyDownloadedExternalSources.push(source);
 
@@ -255,9 +257,9 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
 
         // add link to it to html
         if (linkElement.href) {
-          linkElement.href = path;
+          linkElement.href = localFileLinkPrefix +  path;
         } else if (linkElement.src) {
-          linkElement.src = path;
+          linkElement.src = localFileLinkPrefix + path;
         } else {
           continue;
         }
@@ -266,9 +268,9 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
     } else {
       // only relink not re download css and js files
       if (linkElement.href) {
-        linkElement.href = alreadyExistingExternalResourcesPaths[alreadyDownloadedExternalSources.indexOf(source)];
+        linkElement.href = localFileLinkPrefix + alreadyExistingExternalResourcesPaths[alreadyDownloadedExternalSources.indexOf(source)];
       } else if (linkElement.src) {
-        linkElement.src = alreadyExistingExternalResourcesPaths[alreadyDownloadedExternalSources.indexOf(source)];
+        linkElement.src = localFileLinkPrefix + alreadyExistingExternalResourcesPaths[alreadyDownloadedExternalSources.indexOf(source)];
       } else {
         continue;
       }
@@ -504,7 +506,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       downloadedMoodleDeepLinks.push(path);
 
       // start doc
-      let doc = await getRelevantPageContent(writer, linkedDoc, '../');
+      let doc = await getRelevantMoodlePageContent(writer, linkedDoc, '../');
 
       // get linked files in folder/assignment
       doc = await downloadReplaceDirectLinkedFileLinks(writer, doc, '../');
@@ -543,7 +545,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       }
       downloadedMoodleDeepLinks.push(path);
 
-      let doc = await getRelevantPageContent(writer, linkedDoc, '../');
+      let doc = await getRelevantMoodlePageContent(writer, linkedDoc, '../');
 
       // get linked files in section
       doc = await downloadReplaceDirectLinkedFileLinks(writer, doc, '../');
@@ -586,7 +588,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       }
       downloadedMoodleDeepLinks.push(path);
 
-      let doc = await getRelevantPageContent(writer, linkedDoc, '../');
+      let doc = await getRelevantMoodlePageContent(writer, linkedDoc, '../');
       doc = addLinkBackToCourseToNav(doc);
       const htmlWithDoctype = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
       addTextFileToArchive(writer, path, htmlWithDoctype)
@@ -739,13 +741,6 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
         // safe filename is important else it crashes
         let path = 'Dateien/' + safeFileName(fileName) + '.' + fileEnding;
 
-        // if (fileResponse.url.includes('esearch-based_web_design_and_usability_guidelines')) {
-        //   // console.debug(downloadedUrls);
-        //   // console.log(fileResponse.url);
-        //   // console.log(downloadedUrls.includes(fileResponse.url));
-        //   debugger;
-        // }
-
         let foundSameBlobs = false;
         if (alreadyExistingDirectLinkPath.includes(path)) {
           for (let i = 0; i < alreadyExistingDirectLinkPath.length; i++) {
@@ -782,8 +777,33 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
         }
 
         if (!foundSameBlobs) {
-          // only download new one if not same files as previously
-          await writeStreamIntoZip(writer, path, fileStream);
+          if (fileResponse.url.includes('.html')) {
+            const textOrUrlOrStream = await fileResponse.text();
+
+            // is html linked file like decker slide decks which should be downloaded but their links to css/jss and so on rewritten
+            if (textOrUrlOrStream && textOrUrlOrStream.includes('<html') && textOrUrlOrStream.includes('</html>')) {
+              let parser = new DOMParser();
+              let parsedDoc = parser.parseFromString(textOrUrlOrStream, 'text/html');
+              let linkedDoc = parsedDoc.cloneNode(true);
+              // set base uri to redirected plugin file url not leave /moodle/course?...
+              // do this add after cloning linkedDoc to not destroy references in goal doc
+              const base = parsedDoc.createElement('base');
+              base.href = fileResponse.url;
+              parsedDoc.head.appendChild(base);
+
+              // debugger;
+              linkedDoc.head = linkedDoc.createElement('head');
+              // debugger;
+              linkedDoc = await addExternalResourcesToDoc(writer, parsedDoc, linkedDoc, '../');
+              linkedDoc = await downloadLinkEmbededMediaElements(writer, linkedDoc, localFileLinkPrefix);
+
+              const htmlWithDoctype = '<!DOCTYPE html>' + linkedDoc.documentElement.outerHTML;
+              addTextFileToArchive(writer, path, htmlWithDoctype)
+            }
+          } else {
+            // only download new one if not same files as previously
+            await writeStreamIntoZip(writer, path, fileStream);
+          }
         }
 
         linkElements[i].href = localFileLinkPrefix + path;
@@ -803,6 +823,8 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
   return doc;
 }
 
+// TODO conceptunally keep this
+let alreadyExistingWebImagesPaths = [];
 /**
  * Downloads files like images which are embeded directly in the written html
  * @param {*} writer Writer to write linked resources backups to
@@ -810,8 +832,6 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
  * @param {string} localFileLinkPrefix Prefix for local files linked. Used by web pages in sub folders to get back to root
  * @return {Promise<document>}
  */
-// TODO conceptunally keep this
-let alreadyExistingWebImagesPaths = [];
 const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix = '') => {
   // selector to both select url and video link a tags
 
@@ -900,9 +920,9 @@ const addTextFileToArchive = (writer, path, text) => {
  * @param {document} inputDoc The input doc from which to copy
  * @param {string} localFileLinkPrefix Prefix for local file links like web images which are saved
  */
-const getRelevantPageContent = async (writer, inputDoc, localFileLinkPrefix = '') => {
+const getRelevantMoodlePageContent = async (writer, inputDoc, localFileLinkPrefix = '') => {
   let doc = getBasicCleanDocumentClone(inputDoc);
-  doc = addRelevantHtmlToDoc(inputDoc, doc);
+  doc = addRelevantMoodleHtmlToDoc(inputDoc, doc);
   doc = await addExternalResourcesToDoc(writer, inputDoc, doc);
   doc = await downloadLinkEmbededMediaElements(writer, doc, localFileLinkPrefix);
   return doc;
@@ -922,7 +942,7 @@ const archiveCourse = async () => {
   readable.pipeTo(fileStream);
 
   /* Creating a html document element backup of basic moodle course page */
-  let doc = await getRelevantPageContent(writer, document);
+  let doc = await getRelevantMoodlePageContent(writer, document);
 
   // TODO make possible to save with and without videos
   doc = await replaceMoodleDeepLinks(writer, doc);
