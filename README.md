@@ -33,7 +33,6 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
   * Have 2 buttons one with video (smaller) and one without videos
   * Spinning ststus feedback not statis
 * Wuestudy allow password manager login like for wuecampus
-* Option to activate adspace on right side of courses somehow
 * Support creator donate link please consider donatig if made your study better
 * Improve AutoDateScroll with section title dates and dates parsed from fließtext
 * Competive advantage bei Abstimmungen. Vor Auswahl Beginn machen. Wird gespeichert dann bei Startzeit ausgewählt auch sekundär und drei Option wählen wenn das failed dann alert
