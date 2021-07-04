@@ -72,6 +72,7 @@
       ],
       "js": [
         "npm_scripts/browser-polyfill.min.js",
+        "src/inject/credentials.js",
         "src/inject/wuecampus/loginPage.js"
       ]
     },
@@ -109,6 +110,7 @@
       ],
       "js": [
         "npm_scripts/browser-polyfill.min.js",
+        "src/inject/credentials.js",
         "src/inject/wuestudy/anyPage.js"
       ]
     },
@@ -118,6 +120,7 @@
       ],
       "js": [
         "npm_scripts/browser-polyfill.min.js",
+        "src/inject/credentials.js",
         "src/inject/webmail/login/login.js"
       ]
     },

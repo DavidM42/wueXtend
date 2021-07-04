@@ -3,17 +3,6 @@ const passwordFieldId = 'horde_pass';
 const loginBtnFieldId = 'login-button';
 const mobileLoginBtnSelector = 'input[name="login_button"]';
 
-
-// lines below basically copy of wuecampus2 login code only other ids
-const saveSettings = (usernameIn, passwordIn) => {
-  browser.storage.local.set({
-    username: usernameIn.toLowerCase(),
-    password: passwordIn,
-    // opt in cause important feature
-    autoLogin: true
-  });
-};
-
 const getLoginBtn = () => {
   let loginButton = document.getElementById(loginBtnFieldId);
 
@@ -44,7 +33,6 @@ const ripPasswordsFromForm = () => {
   saveSettings(username, password);
 };
 
-// TODO write central js file for getting credentials from storage to use in this and wuestudy
 /**
  * Called when credentials are managed by this extension and user data was retrieved
  * @param {*} credsObj Object with username,password and autoLogin property containing user preferences
@@ -112,19 +100,24 @@ browser.runtime.sendMessage({}).then(() => {
       // document.getElementsByClassName('alert').length == 0
       // would like sync storagearea not local but android firefox does not support I think
       // need storage permission
-      // TODO better if else for more readability
+
       const noLoginError = document.querySelector('ul.notices') === null;
       if (noLoginError) {
+        // no previous failed logins could be found
+        // ready to try login
         if (loginInfoWasPreFilled()) {
+          // username/password pre filled by password manager -> just click login btn
           const autoLoginPromise = browser.storage.local.get(['autoLogin']);
           autoLoginPromise.then(onPasswordManagedCredsLogin).catch(onLoginPageError);
         } else {
+          // username/password not prefilled by password manager
+          // get saved values from localstorage and log in
           const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
           getPromise.then(onExtensionManagedCredsLogin).catch(onLoginPageError);
         }
       } else {
+        // login failed -> do not retry
         console.warn('Login error displayed: ' + noLoginError.innerText);
-        // TODO if loginerrormessage other than sessionInvalid redirect to setttings of extension
       }
 
     }

@@ -1,13 +1,3 @@
-// import { saveSettings } from '../credentials.js';
-const saveSettings = (usernameIn, passwordIn) => {
-  browser.storage.local.set({
-    username: usernameIn.toLowerCase(),
-    password: passwordIn,
-    // opt in cause important feature
-    autoLogin: true
-  });
-};
-
 const fillOutLoginForm = (username, password) => {
   const usernameField = document.getElementById('username');
   const passwordField = document.getElementById('password');
@@ -29,7 +19,6 @@ const ripPasswordsFromForm = () => {
   saveSettings(username, password);
 };
 
-// TODO write central js file for getting credentials from storage to use in this and wuestudy
 /**
  * Called when credentials are managed by this extension and user data was retrieved
  * @param {*} credsObj Object with username,password and autoLogin property containing user preferences
@@ -47,7 +36,6 @@ const onExtensionManagedCredsLogin = (credsObj) => {
 
     // Only rip credentials to localstorage if consented by activating auto Login
     if (autoLogin !== false) {
-      // TODO test if this works
       loginButton.onclick = ripPasswordsFromForm;
     }
   } else {
@@ -97,23 +85,32 @@ browser.runtime.sendMessage({}).then(() => {
       // document.getElementsByClassName('alert').length == 0
       // would like sync storagearea not local but android firefox does not support I think
       // need storage permission
-      // TODO better if else for more readability
       const noLoginError = document.getElementById('loginerrormessage') === null;
       if (noLoginError) {
+        // no failed previous login attempts
         if (loginInfoWasPreFilled()) {
+          // fields are already filled by e.g. password manager
+          // simply click login btn
           const autoLoginPromise = browser.storage.local.get(['autoLogin']);
           autoLoginPromise.then(onPasswordManagedCredsLogin).catch(onLoginPageError);
         } else {
+          // fields not pre filled
+          // fill username, password and log in
           const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
           getPromise.then(onExtensionManagedCredsLogin).catch(onLoginPageError);
         }
       } else {
+        // login error message exists so already failed to log in
         const sessionInvalid = document.getElementById('loginerrormessage').innerText.toLocaleLowerCase().includes('session');
         if (sessionInvalid) {
+          // cause of failed login was invalid session so try again
           const getPromise = browser.storage.local.get(['username', 'password', 'autoLogin']);
           getPromise.then(onExtensionManagedCredsLogin).catch(onLoginPageError);
+        } else {
+          // unrecoverable failure of login
+          // have wrong credentials
+          alert('Gespeichterter Login in wueXtension scheint falsch zu sein. Ändere ihn in den addon Einstellungen')
         }
-        // TODO if loginerrormessage other than sessionInvalid redirect to setttings of extension
       }
 
     }

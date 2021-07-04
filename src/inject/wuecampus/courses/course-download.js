@@ -117,7 +117,7 @@ const safeFileName = (inString) => {
   // inString = inString.replace('ö', 'oe').replace('ä', 'ae').replace('ü', 'ue').replace('ß', 'ss');
   // inString = inString.replace('Ö', 'Oe').replace('Ä', 'Ae').replace('Ü', 'Ue');
 
-  // TODO is temp simple solution thanks to https://stackoverflow.com/a/8485137 maybe safer way usable in client side js
+  // is simple solution thanks to https://stackoverflow.com/a/8485137 maybe safer way usable in client side js
   // including umlaut boogaloo so doesnt get -
   // For - surrounded by e.g. spaces it replaces "dwdwd - dwdw " with "dwdwd---dwdw" and then "dwdwd-dwdw"
   return inString.replace(/[^a-z0-9äöüß()+]/gi, '-').replace(/ /g, '_').replace(/---/g, '-');
@@ -927,7 +927,6 @@ const archiveCourse = async () => {
   // TODO make possible to save with and without videos
   doc = await replaceMoodleDeepLinks(writer, doc);
 
-  // TODO reactivate
   doc = await downloadReplaceDirectLinkedFileLinks(writer, doc);
 
   // one small fix

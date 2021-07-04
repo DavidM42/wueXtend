@@ -24,6 +24,8 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * Mime-Types [CDN](https://cdn.jsdelivr.net/npm/mime-types@2.1.27/index.js) [github](https://github.com/jshttp/mime-types)
 
 ## TODO
+
+* Build script to combine scripts and import
 * Define one naming scheme for all files and rename them
 * ESLint on and fix all the problems
 * Rip whole semester / rip all wuecampus belegt button?

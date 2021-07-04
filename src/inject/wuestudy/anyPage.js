@@ -1,25 +1,18 @@
-// import { saveSettings } from '../credentials.js';
-const saveSettings = (usernameIn, passwordIn) => {
-  browser.storage.local.set({
-    username: usernameIn.toLowerCase(),
-    password: passwordIn,
-    // TODO opt in or optout?
-    autoLogin: true
-  });
+/**
+ * Checks if login info was already autofilled by password manager or other extensions
+ * @param usernameElement {HTMLElement}
+ * @param passwordElement {HTMLElement}
+ */
+const loginInfoWasPreFilled = (usernameElement, passwordElement) => {
+  const username = usernameElement.value;
+  const password = passwordElement.value;
+  return username && password;
 };
 
-
 const loginForm = (username, password) => {
-  // TODO why is this needed why does username keeps getting uppercase
+  // username keeps getting uppercase so check for that here
   if (username[0] === 'S') {
     username = username.toLowerCase();
-  }
-
-  if (!username && !password) {
-    // should not try to login if both are empty
-    // undefined cases for new installs is catched earlier and ripPasswords attached
-    // but if were explicitly cleared then this should catch it
-    return;
   }
 
   const loginClassElements = document.getElementsByClassName('input_login_hisinone');
@@ -27,6 +20,11 @@ const loginForm = (username, password) => {
   // login Form if you try to access reserved site without beeing logged in
   const loginForm = document.getElementById('login');
   const loginFormInputs = document.getElementsByClassName('input_login');
+
+  // html elements to find and use later
+  let usernameElement;
+  let passwordElement;
+  let loginButton;
 
   if (loginForm || loginClassElements.length > 0) {
     console.log('You are not logged in');
@@ -38,20 +36,19 @@ const loginForm = (username, password) => {
       if (loginForm) {
         console.log('Will log in now and redirect');
         // filling out info not using ids cause seem randomized
+
         for (let i = 0; i < loginFormInputs.length; i++) {
           const element = loginFormInputs[i];
 
           const type = element.type;
           if (type === 'text') {
-            element.value = username;
+            usernameElement = element;
           } else if (type === 'password') {
-            element.value = password;
+            passwordElement = element;
           }
         }
 
-        // TODO refactor if and else for two login strategies here to reduce code repetition
-        const loginButton = document.getElementsByClassName('submit_highlighted')[0];
-        loginButton.click();
+        loginButton = document.getElementsByClassName('submit_highlighted')[0];
       } else {
         console.log('Will log in now and go to main page');
         // else fallback to top of page which redirects to index site
@@ -60,20 +57,38 @@ const loginForm = (username, password) => {
           const element = loginClassElements[i];
           const title = element.title.toLowerCase();
           if (title.includes('benutzername') || title.includes('user name')) {
-            element.value = username;
+            usernameElement = element;
           } else if (title.includes('passwor')) { //works for both language cases passwort and password
-            element.value = password;
+            passwordElement = element;
           }
         }
-        let loginButton = document.getElementById('loginForm:login');
+        loginButton = document.getElementById('loginForm:login');
         if (!loginButton) {
           // other class name on mobile site
           loginButton = document.getElementsByClassName('mobileLoginButton')[0];
         }
-        loginButton.click();
       }
 
+      if (!usernameElement || !passwordElement) {
+        console.warn('Could not find username and password fields');
+      }
 
+      // username/password was pre filled by e.g. password manager
+      // just click login button
+      if (loginInfoWasPreFilled(usernameElement, passwordElement)) {
+        loginButton.click();
+      } else {
+        if (!username && !password) {
+          // should not try to login if both are empty
+          // undefined cases for new installs is catched earlier and ripPasswords attached
+          // but if were explicitly cleared then this should catch it
+          console.warn('No stored username/password in extension and no password manager prefilling. Cannot login automatically');
+          return;
+        }
+        usernameElement.value = username;
+        passwordElement.value = password;
+        loginButton.click();
+      }
     } else {
       console.log('Login failed previously');
       alert('Login failed. Check credentials in addon settings');
@@ -85,7 +100,6 @@ const ripPasswordsFromForm = () => {
   let username = null;
   let password = null;
 
-  // TODO do this loop only once not two times in one file
   const loginClassElements = document.getElementsByClassName('input_login_hisinone');
   if (loginClassElements.length > 0) {
     const error_infoboxes = document.getElementsByClassName('error_infobox');
@@ -112,7 +126,6 @@ const ripPasswordsFromForm = () => {
 };
 
 
-// TODO write central js file for getting credentials from storage to use in this and wuestudy
 const onCredsGot = (credsObj) => {
   const username = credsObj.username;
   const password = credsObj.password;
@@ -120,8 +133,12 @@ const onCredsGot = (credsObj) => {
 
   if (username === undefined || password === undefined) {
     // if no username password were set get the ones entered on first login onclick of loginBtn
-    // TODO catch case where loginButton null
     const loginButton = document.getElementById('loginForm:login');
+
+    if (!loginButton) {
+      console.warn('Login button was not found!');
+    }
+
     loginButton.onclick = ripPasswordsFromForm;
   } else {
     // auto login turn of setting
