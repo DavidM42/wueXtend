@@ -112,7 +112,8 @@
         "npm_scripts/browser-polyfill.min.js",
         "src/inject/credentials.js",
         "src/inject/wuestudy/anyPage.js"
-      ]
+      ],
+      "run_at": "document_end"
     },
     {
       "matches": [
