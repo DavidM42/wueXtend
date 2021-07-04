@@ -245,7 +245,7 @@ const addExternalResourcesToDoc = async (writer, inputDoc, doc) => {
         // safe filename is important else it crashes
         let path = 'websources/' + fileName + '.' + fileEnding;
 
-        if (alreadyExistingExternalResourcesPaths.includes(path)) {
+        if (!alreadyExistingExternalResourcesPaths.includes(path)) {
           alreadyExistingExternalResourcesPaths.push(path);
           alreadyDownloadedExternalSources.push(source);
 
