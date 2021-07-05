@@ -1,6 +1,6 @@
 {
   "name": "wueXtend",
-  "version": "1.0.4.1",
+  "version": "1.0.4.2",
   "description": "Assisting functionality for the websites of the university of wuerzburg as cross platform browser extension.",
   "main": "index.js",
   "scripts": {
