@@ -613,6 +613,7 @@ const replaceMoodleDeepLinks = async (writer, doc, includeSections = true, pathP
   // Add new supported url types to query here
   const supportedMoodleUrlSchemes = {
     urlSchema: 'url/',
+    // forumSchema: 'forum/',
     videoUrlSchema: 'lti/',
     pageLinkUrlSchema: 'page/',
     folderUrlSchema: 'folder/',
@@ -664,7 +665,13 @@ const replaceMoodleDeepLinks = async (writer, doc, includeSections = true, pathP
     // }
 
     const returnedPath = await resolveDeepMoodleLinks(writer, element.href);
-    linkElements[i].href = pathPrefix + returnedPath;
+    if (returnedPath.startsWith('http')) {
+      // is direct link to external resource like zoom or miro
+      linkElements[i].href = returnedPath;
+    } else {
+      // link within wuecampus so path prefix relevant
+      linkElements[i].href = pathPrefix + returnedPath;
+    }
 
     // await waitHumanLikeTime(150);
   }
