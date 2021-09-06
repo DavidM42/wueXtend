@@ -613,7 +613,7 @@ const replaceMoodleDeepLinks = async (writer, doc, includeSections = true, pathP
   // Add new supported url types to query here
   const supportedMoodleUrlSchemes = {
     urlSchema: 'url/',
-    // forumSchema: 'forum/',
+    forumSchema: 'forum/',
     videoUrlSchema: 'lti/',
     pageLinkUrlSchema: 'page/',
     folderUrlSchema: 'folder/',
@@ -864,12 +864,35 @@ const downloadLinkEmbededMediaElements = async (writer, doc, localFileLinkPrefix
           }
         }
 
-        // check agains array of names already used to not create duplicates
+        // generic filename assignment
         let fileName = decodeURIComponent(fileNameSplit[fileNameSplit.length - 1].split('.')[0]);
+
+        // special case for image.php type images internally in wuecampus for activity icons with same ending name
+        if (fileNameSplit.length >= 9 && fileNameSplit[2] === 'wuecampus2.uni-wuerzburg.de' && fileNameSplit[5] === 'image.php') {
+          /*
+            Activityicons image php url:
+            https://wuecampus2.uni-wuerzburg.de/moodle/theme/image.php/fordson/url/1630338752/icon
+
+            is split like this
+            0: "https:"
+            1: ""
+            2: "wuecampus2.uni-wuerzburg.de"
+            3: "moodle"
+            4: "theme"
+            5: "image.php"
+            6: "fordson"
+            7: "url"
+            8: "1630338752"
+            9: "icon"
+          */
+          // prepend with more of path to be more specific here
+          fileName = decodeURIComponent(fileNameSplit.slice(6, 9).join('-')) + fileName;
+        }
 
         // safe filename is important else it crashes
         let path = 'webImages/' + safeFileName(fileName) + '.' + fileEnding;
 
+        // check against array of names already used to not create duplicates
         if (!alreadyExistingWebImagesPaths.includes(path)) {
           // save path and url downloaded to compare later
           alreadyExistingWebImagesPaths.push(path);
