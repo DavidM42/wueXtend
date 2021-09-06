@@ -724,9 +724,10 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
       // TODO maybe alert that some were not backuped?
       if (fileResponse.ok) {
         // gets name from file url not activity name
-        const fileNameSplit = fileResponse.url.split('/');
+        const pathSplit = fileResponse.url.split('/');
 
-        let fileEnding = fileNameSplit[fileNameSplit.length - 1].split('.')[1];
+        let fileEndingIntermediate = pathSplit[pathSplit.length - 1];
+        let fileEnding = fileEndingIntermediate.split('.')[fileEndingIntermediate.length - 1];
         // make sure to not include query like ?forcedownload
         if (!fileEnding) {
           // try to guess it from response type
@@ -740,8 +741,10 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
         const splitQueryEnding = fileEnding.split('?');
         fileEnding = splitQueryEnding[0];
 
-        // check agains array of names already used to not create duplicates
-        let fileName = decodeURIComponent(fileNameSplit[fileNameSplit.length - 1].split('.')[0]);
+        // split name at every .
+        let fileNameSplitArray = pathSplit[pathSplit.length - 1].split('.');
+        // remove everything after last point because thats the file ending but join all other elements again
+        let fileName = decodeURIComponent(fileNameSplitArray.splice(0, fileNameSplitArray.length - 1).join('.'));
 
         // safe filename is important else it crashes
         let path = 'Dateien/' + safeFileName(fileName) + '.' + fileEnding;
@@ -753,6 +756,7 @@ const downloadReplaceDirectLinkedFileLinks = async (writer, doc, localFileLinkPr
         //   debugger;
         // }
 
+        // check agains array of names already used to not create duplicates
         let foundSameBlobs = false;
         if (alreadyExistingDirectLinkPath.includes(path)) {
           for (let i = 0; i < alreadyExistingDirectLinkPath.length; i++) {
