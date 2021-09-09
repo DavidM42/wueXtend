@@ -1,4 +1,4 @@
-# wueXtension
+# wueXtend
 Assisting functionality for the websites of the university of wuerzburg in a single browser extension
 
 ## Features
@@ -10,8 +10,8 @@ Assisting functionality for the websites of the university of wuerzburg in a sin
 * Download archive zip version of courses
 
 ## Test locally
-1. Clone `git clone git@github.com:DavidM42/wueXtension.git`
-    * cd wueXtension
+1. Clone `git clone git@github.com:DavidM42/wueXtend.git`
+    * cd wueXtend
 2. `npm install`
 3. Load in browser
 
