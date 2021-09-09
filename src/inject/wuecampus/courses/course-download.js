@@ -539,6 +539,9 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       let path = 'sections/' + safeFileName(sectionHeader.innerText) + '.html';
 
       if (downloadedMoodleDeepLinks.includes(path)) {
+        // important to return here
+        // later call of replaceMoodleDeepLinks() produces recursion
+        // which is stopped here
         return path;
       }
       downloadedMoodleDeepLinks.push(path);
@@ -549,7 +552,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
       doc = await downloadReplaceDirectLinkedFileLinks(writer, doc, '../');
 
       // treat like whole course by replacing all deep links with local files
-      doc = await replaceMoodleDeepLinks(writer, doc, false, '../');
+      doc = await replaceMoodleDeepLinks(writer, doc, '../');
 
       // TODO fix links on top and bottom left and right side to previous and next section to be local ones
 
@@ -607,7 +610,7 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
  * @param {*} writer The writer to write potential video into
  * @param {document} doc The document of the course containing links which shoudl be local ones
  */
-const replaceMoodleDeepLinks = async (writer, doc, includeSections = true, pathPrefix = '') => {
+const replaceMoodleDeepLinks = async (writer, doc, pathPrefix = '') => {
   const moodleUrlStart = 'https://wuecampus2.uni-wuerzburg.de/moodle/mod/'
 
   // Add new supported url types to query here
@@ -636,15 +639,11 @@ const replaceMoodleDeepLinks = async (writer, doc, includeSections = true, pathP
     urlTypeSelectors += `a[href^="${combinedUrl}"]`
   }
 
-  if (includeSections) {
-    // has extra flag to prevent recursion
-
-    // sections like this need special query selector additon
-    // https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php?id=1337&section=2
-    const sectionUrlStart = 'https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php';
-    const sectionSelectorCourseContainsSections = `, a[href^="${sectionUrlStart}"][href*="section"].btn`;
-    urlTypeSelectors += sectionSelectorCourseContainsSections
-  }
+  // sections like this need special query selector additon
+  // https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php?id=1337&section=2
+  const sectionUrlStart = 'https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php';
+  const sectionSelectorCourseContainsSections = `, a[href^="${sectionUrlStart}"][href*="section"]`;
+  urlTypeSelectors += sectionSelectorCourseContainsSections
 
   const linkElements = doc.querySelectorAll(urlTypeSelectors);
   for (let i = 0; i < linkElements.length; i++) {
