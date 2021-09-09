@@ -424,6 +424,13 @@ const resolveDeepMoodleLinks = async (writer, moodleUrl) => {
           const realVideoUrl = sourceElement.src;
           if (realVideoUrl) {
 
+            // link these videos not archive for special use case
+            // this server has no authentication
+            // but restrictive cors blocking chrome downloads in background
+            if (realVideoUrl.includes('https://www.studien.psyergo.uni-wuerzburg.de/')) {
+              return realVideoUrl;
+            }
+
             const urlParts = realVideoUrl.split('/');
             // safe filename is important else it crashes
             let path = 'videos/' + decodeURIComponent(urlParts[urlParts.length - 1]);
